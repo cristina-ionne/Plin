@@ -49,6 +49,14 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import com.plin.R
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.layout.ContentScale
 
 private val CheckGreen = Color(0xFF16A34A)
 
@@ -57,6 +65,47 @@ private val CheckGreen = Color(0xFF16A34A)
  *
  * Short click toggles completed; long press opens the inspect dialog.
  */
+@Composable
+fun NavBar(
+    modifier: Modifier = Modifier,
+    onProfileClick: () -> Unit = {}
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF0FAFF))
+            .statusBarsPadding()
+            .height(97.dp)
+            .padding(horizontal = 28.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Logo()
+        Profile(onClick = onProfileClick)
+    }
+}
+
+@Composable
+fun Logo() {
+    Image(
+        painter = painterResource(R.drawable.logo),
+        contentDescription = "Logo",
+        modifier = Modifier.height(40.dp),
+        contentScale = ContentScale.Fit
+    )
+}
+
+@Composable
+fun Profile(onClick: () -> Unit) {
+    Image(
+        painter = painterResource(R.drawable.ic_profile),
+        contentDescription = "Profilo",
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+    )
+}
 @Composable
 fun TaskListScreen(
     onOpenSettings: () -> Unit,
@@ -75,29 +124,16 @@ fun TaskListScreen(
         viewModel.refreshMainView()
     }
 
+
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 20.dp, vertical = 48.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Plin",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                TextButton(onClick = onOpenSettings) {
-                    Text(
-                        text = "⚙",
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                }
-            }
+
+
             if (isArchive) {
                 Text(
                     text = "Archive",

@@ -17,6 +17,7 @@ import com.plin.ui.theme.PlinTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        android.util.Log.d("PLIN", "MainActivity started")
         enableEdgeToEdge()
         setContent {
             PlinTheme {
