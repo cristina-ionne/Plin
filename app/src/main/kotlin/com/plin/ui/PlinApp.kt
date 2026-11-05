@@ -10,44 +10,61 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 
+
 private enum class PlinScreen {
     TASK_LIST,
-    SETTINGS,
     FRIEND_OF_THE_WEEK_SETTINGS,
 }
 
 @Composable
 fun PlinApp() {
+    // State to manage the overlay when the settings button is clicked
+    var showSettingsOverlay by remember { mutableStateOf(false) }
+
      // Pre-existing state for the main screen:
     var screen by remember { mutableStateOf(PlinScreen.TASK_LIST) }
     
-    // NEW DECLARATION:
+    // State to manage the currently selected section in the bottom navigation
     var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
       
     Column(modifier = Modifier.fillMaxSize()) {
-        NavBar(onProfileClick = { screen = PlinScreen.SETTINGS })
+        
+        NavBar(onProfileClick = { showSettingsOverlay = !showSettingsOverlay })
 
         Box(modifier = Modifier.weight(1f)) {
+            
             when (screen) {
                 PlinScreen.TASK_LIST -> TaskListScreen(
-                    onOpenSettings = { screen = PlinScreen.SETTINGS },
+                // First you had: onOpenSettings = { screen = PlinScreen.SETTINGS },
+                // Now you can use the overlay toggle:
+                onOpenSettings = { showSettingsOverlay = !showSettingsOverlay },
+
                 )
-                PlinScreen.SETTINGS -> SettingsScreen(
-                    onHome = { screen = PlinScreen.TASK_LIST },
-                    onBack = { screen = PlinScreen.TASK_LIST },
-                    onOpenFriendOfTheWeek = { screen = PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS },
-                )
+                
                 PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(
-                    onHome = { screen = PlinScreen.TASK_LIST },
-                    onBack = { screen = PlinScreen.SETTINGS },
+                     onHome = { screen = PlinScreen.TASK_LIST },
+                    // First you had: onBack = { screen = PlinScreen.SETTINGS },
+                    // Now you go back to the list (or to the overlay, depening on what you prefer):
+                    onBack = { screen = PlinScreen.TASK_LIST },
+        
                 )
             }
+
+            if (showSettingsOverlay) {
+                    SettingsOverlay(
+                        onDismiss = { showSettingsOverlay = false },
+                        onNavigateToCategories = {
+                            showSettingsOverlay = false
+                        }
+                    )
+                }
         }
         
          // Calling BottomNavigation and passing the current selected section
         BottomNavigation(
             currentSection = currentBottomSection,
             onSectionSelected = { section ->
+                showSettingsOverlay = false
                 currentBottomSection = section
                 // Manage the action on section change:
                 when (section) {
