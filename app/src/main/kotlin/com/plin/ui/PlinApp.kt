@@ -1,6 +1,7 @@
 package com.plin.ui
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,8 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideOutHorizontally
 
 
 private enum class PlinScreen {
@@ -53,14 +53,9 @@ fun PlinApp() {
         // B. Animation over the 'when'
         androidx.compose.animation.AnimatedVisibility(
             visible = showSettingsOverlay,
-            enter = slideInVertically(initialOffsetY = { -it }),
-            exit = slideOutVertically(
-            targetOffsetY = { fullHeight -> 
-                // Instead of -fullHeight (that stops the upper border exactly at 0),
-                // we use a larger value to make it disappear completely above the screen.
-                // -fullHeight - 100 will ensure the base of the overlay reaches outside the screen.
-                -fullHeight - 200
-            },
+            enter = slideInHorizontally(initialOffsetX = { it }),
+            exit = slideOutHorizontally(
+            targetOffsetX = { it },
             animationSpec = tween(durationMillis = 400) // Slightly increase the duration for a smoother animation
         )
         ) {
