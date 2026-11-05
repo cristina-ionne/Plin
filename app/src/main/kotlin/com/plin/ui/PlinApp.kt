@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.background
-import androidx.compose.material3.Text
-import androidx.compose.ui.graphics.Color
+
 private enum class PlinScreen {
     TASK_LIST,
     SETTINGS,
@@ -20,8 +18,12 @@ private enum class PlinScreen {
 
 @Composable
 fun PlinApp() {
+     // Pre-existing state for the main screen:
     var screen by remember { mutableStateOf(PlinScreen.TASK_LIST) }
-
+    
+    // NEW DECLARATION:
+    var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
+      
     Column(modifier = Modifier.fillMaxSize()) {
         NavBar(onProfileClick = { screen = PlinScreen.SETTINGS })
 
@@ -41,5 +43,21 @@ fun PlinApp() {
                 )
             }
         }
+        
+         // Calling BottomNavigation and passing the current selected section
+        BottomNavigation(
+            currentSection = currentBottomSection,
+            onSectionSelected = { section ->
+                currentBottomSection = section
+                // Manage the action on section change:
+                when (section) {
+                    BottomNavigationSection.Home -> screen = PlinScreen.TASK_LIST
+                    BottomNavigationSection.Completed -> { /* Navigate to Completed screen */ }
+                    BottomNavigationSection.Friends -> { /* Navigate to Friends screen */ }
+                    BottomNavigationSection.Rewards -> { /* Navigate to Rewards screen */ }
+                }
+            }
+        )
     }
+        
 }
