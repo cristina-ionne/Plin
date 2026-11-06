@@ -65,6 +65,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import com.plin.ui.theme.PlinBlue
 import com.plin.ui.theme.PlinWhite
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 
 private val CheckGreen = Color(0xFF16A34A)
 
@@ -119,6 +122,7 @@ fun TaskListScreen(
     var selectedTaskKey by remember { mutableStateOf<String?>(null) }
     val selectedTask = tasks.find { "${it.id}-${it.instanceNumber}" == selectedTaskKey }
     val currentWeekKey = currentWeek?.key.orEmpty()
+    var showAddOverlay by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.refreshMainView()
@@ -163,7 +167,7 @@ fun TaskListScreen(
                 .padding(bottom = 20.dp)
         ) {
             Button(
-                onClick = { showAddDialog = true },
+                onClick = { showAddOverlay = true },
                 colors = ButtonDefaults.buttonColors(containerColor = PlinBlue),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -181,14 +185,49 @@ fun TaskListScreen(
             }
         }
 
-    }
 
+            AnimatedVisibility(
+                visible = showAddOverlay,
+                enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 300))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .clickable { showAddOverlay = false }
+                )
+            }
+
+
+            AnimatedVisibility(
+                visible = showAddOverlay,
+                enter = scaleIn(
+                    initialScale = 0.8f, 
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(), 
+                    contentAlignment = Alignment.Center
+                ) {
+                    AddTaskOverlay(
+                        onDismiss = { showAddOverlay = false },
+                        onSave = { title, category, isWeekly, duration ->
+                            viewModel.addTask(title, category, isWeekly, duration)
+                            showAddOverlay = false
+                        }
+                    )
+                }
+            }
+        }
 
     if (showAddDialog) {
         AddTaskDialog(
             onDismiss = { showAddDialog = false },
             onSave = { title, category, isWeekly ->
-                viewModel.addTask(title, category, isWeekly)
+                viewModel.addTask(title, category, isWeekly, duration = 1) // Default duration to 1 hour
                 showAddDialog = false
             },
         )

@@ -88,7 +88,7 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addTask(title: String, category: TaskCategory, isWeekly: Boolean = false) {
+    fun addTask(title: String, category: TaskCategory, isWeekly: Boolean, duration: Int) {
         viewModelScope.launch {
             val weekKey = _currentWeek.value?.key ?: WeekCalendar.forDate().key
             taskService.addTask(title, category, isWeekly, assignedWeek = weekKey)
