@@ -12,19 +12,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.slideOutHorizontally
-
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private enum class PlinScreen {
     TASK_LIST,
     FRIEND_OF_THE_WEEK_SETTINGS,
+    COMPLETED_SCREEN
 }
 
 @Composable
-fun PlinApp() {
-    // State to manage the overlay when the settings button is clicked
+fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
+    
     var showSettingsOverlay by remember { mutableStateOf(false) }
 
-     // Pre-existing state for the main screen:
     var screen by remember { mutableStateOf(PlinScreen.TASK_LIST) }
     
     // State to manage the currently selected section in the bottom navigation
@@ -35,15 +37,17 @@ fun PlinApp() {
     NavBar(onProfileClick = { showSettingsOverlay = !showSettingsOverlay })
 
     // 2. Only Box that contains the rest
-    Box(modifier = Modifier.weight(1f)) {
+    Box(
+        modifier = Modifier
+        .weight(1f)
+        .fillMaxSize()
+        .background(Color(0xFFF0FAFF))
+        ) {
         
         // A. Main content ('when')
         when (screen) {
-            PlinScreen.TASK_LIST -> TaskListScreen(
-                // First you had: onOpenSettings = { screen = PlinScreen.SETTINGS },
-                // Now you can use the overlay toggle:
-                onOpenSettings = { showSettingsOverlay = !showSettingsOverlay },
-)
+            PlinScreen.TASK_LIST -> TaskListScreen()
+            PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
             PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(onHome = { screen = PlinScreen.TASK_LIST },
                     // First you had: onBack = { screen = PlinScreen.SETTINGS },
                     // Now you go back to the list (or to the overlay, depending on what you prefer):
@@ -74,8 +78,14 @@ fun PlinApp() {
                 currentBottomSection = section
                 // Manage the action on section change:
                 when (section) {
-                    BottomNavigationSection.Home -> screen = PlinScreen.TASK_LIST
-                    BottomNavigationSection.Completed -> { /* Navigate to Completed screen */ }
+                    BottomNavigationSection.Home -> {
+                        viewModel.selectTab(TaskListTab.CURRENT_WEEK)
+                        screen = PlinScreen.TASK_LIST
+                    }
+                    BottomNavigationSection.Completed -> { 
+                        viewModel.selectTab(TaskListTab.ARCHIVE)
+                        screen = PlinScreen.COMPLETED_SCREEN
+                    }
                     BottomNavigationSection.Friends -> { /* Navigate to Friends screen */ }
                     BottomNavigationSection.Rewards -> { /* Navigate to Rewards screen */ }
                 }

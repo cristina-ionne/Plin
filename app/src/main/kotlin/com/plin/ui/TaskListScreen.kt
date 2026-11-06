@@ -1,14 +1,13 @@
 package com.plin.ui
 
+import FustatFamily
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +20,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -50,23 +48,26 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 import com.plin.R
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.layout.ContentScale
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 
 private val CheckGreen = Color(0xFF16A34A)
 
-/**
- * Main Plin screen: current-week list or full archive, with add / inspect dialogs.
- *
- * Short click toggles completed; long press opens the inspect dialog.
- */
 @Composable
-fun NavBar(
+fun NavBar( //This is the top navigation bar with the logo and profile icon
     modifier: Modifier = Modifier,
     onProfileClick: () -> Unit = {}
 ) {
@@ -99,7 +100,7 @@ fun Logo() {
 fun Profile(onClick: () -> Unit) {
     Image(
         painter = painterResource(R.drawable.ic_profile),
-        contentDescription = "Profilo",
+        contentDescription = "Profile",
         modifier = Modifier
             .size(44.dp)
             .clip(CircleShape)
@@ -108,115 +109,86 @@ fun Profile(onClick: () -> Unit) {
 }
 @Composable
 fun TaskListScreen(
-    onOpenSettings: () -> Unit,
     viewModel: TaskListViewModel = viewModel(),
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val currentWeek by viewModel.currentWeek.collectAsStateWithLifecycle()
-    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedTaskKey by remember { mutableStateOf<String?>(null) }
     val selectedTask = tasks.find { "${it.id}-${it.instanceNumber}" == selectedTaskKey }
-    val isArchive = selectedTab == TaskListTab.ARCHIVE
     val currentWeekKey = currentWeek?.key.orEmpty()
 
     LaunchedEffect(Unit) {
         viewModel.refreshMainView()
     }
 
-
-
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 48.dp),
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 90.dp)
         ) {
-
-
-            if (isArchive) {
-                Text(
-                    text = "Archive",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-                )
-                Text(
-                    text = "Past weeks only. Set assigned week to the current week to restore.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                )
-            } else {
-                currentWeek?.let { week ->
-                    Text(
-                        text = week.displayLabel,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-                    )
-                }
-                Text(
-                    text = "Tap to toggle done · long-press for details.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                )
-            }
-
+            TodayCard()
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Tasks list goes here
             if (tasks.isEmpty()) {
                 Text(
-                    text = if (isArchive) "No tasks in archive." else "No tasks yet.",
+                    text = "No tasks yet.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 )
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = PlinFabBottomPadding + 56.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
                     items(tasks, key = { "${it.id}-${it.instanceNumber}" }) { task ->
                         TaskRow(
                             task = task,
-                            showWeek = isArchive,
+                            showWeek = false,
                             onClick = { viewModel.toggleTaskCompletion(task) },
                             onLongClick = { selectedTaskKey = "${task.id}-${task.instanceNumber}" },
                         )
                     }
                 }
             }
+
         }
 
-        FloatingActionButton(
-            onClick = { viewModel.toggleTab() },
+        Button(
+            onClick = { /* TODO: add overlay logic */ },
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 20.dp, end = 20.dp, bottom = PlinFabBottomPadding),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-        ) {
-            Text(
-                text = if (isArchive) "Week" else "Archive",
-                modifier = Modifier.padding(horizontal = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+            shape = RoundedCornerShape(20.dp),
+            contentPadding = PaddingValues(0.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF55D3FF)
             )
-        }
+        ) {
 
-        if (!isArchive) {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(start = 20.dp, end = 20.dp, bottom = PlinFabBottomPadding),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
+
                 Text(
-                    text = "Add",
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                )
+                    text = "+ Add a task",
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFF0FAFF)
+                )            
             }
+        
         }
     }
+
+        
 
     if (showAddDialog) {
         AddTaskDialog(
@@ -245,7 +217,7 @@ fun TaskListScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TaskRow(
+fun TaskRow(
     task: Task,
     showWeek: Boolean,
     onClick: () -> Unit,
@@ -521,7 +493,7 @@ private fun TaskInspectDialog(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-                DetailRow(label = "Created", value = formatCreatedAt(task.createdAt))
+                DetailRow(value = formatCreatedAt(task.createdAt))
             }
         },
         confirmButton = {
@@ -538,10 +510,10 @@ private fun TaskInspectDialog(
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun DetailRow(value: String) {
     Column {
         Text(
-            text = label,
+            text = "Created",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
@@ -560,4 +532,59 @@ private fun formatCreatedAt(epochMillis: Long): String {
         .ofLocalizedDateTime(FormatStyle.MEDIUM)
         .withZone(ZoneId.systemDefault())
     return formatter.format(Instant.ofEpochMilli(epochMillis))
+}
+
+
+@Composable
+fun TodayCard() {
+    val today = LocalDate.now()
+    val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    val dayValue = today.dayOfWeek.value // 1 (Mon) to 7 (Sun)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFF55D3FF))
+            .padding(24.dp)
+    ) {
+        Text(
+            text = dayName,
+            fontSize = 36.sp,
+            fontFamily = FustatFamily,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFFF0FAFF)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Progress Bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color(0xFFF0FAFF))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(dayValue / 7f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color(0xFFDD6900))
+            )
+        }
+
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Label "Day X of 7"
+        Text(
+            text = "Day $dayValue of 7",
+            fontSize = 24.sp,
+            fontFamily = FustatFamily,
+            fontWeight = FontWeight.Normal,
+            color = Color(0xFFF0FAFF)
+        )
+    }
 }

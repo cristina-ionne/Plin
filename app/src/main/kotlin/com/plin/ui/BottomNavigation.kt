@@ -77,9 +77,9 @@ fun BottomNavigation(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(89.dp)
+            .height(90.dp)
             .background(Color(0xFFF0FAFF))
-            .border(1.dp, Color(0x1A193F49))
+            .border(1.dp, Color(0xFF193F49))
             .padding(vertical = 20.dp),
         verticalArrangement = Arrangement.Center
     ) {
