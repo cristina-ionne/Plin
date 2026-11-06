@@ -98,6 +98,7 @@ fun AddTaskOverlay(
                             when (duration) {
                                 5 -> "5+ hours"
                                 6 -> "Less than an hour"
+                                1 -> "1 hour"
                                 else -> "$duration hours"
                             }
                         } else {
@@ -109,7 +110,7 @@ fun AddTaskOverlay(
                         color = if (isSelected) {
                             PlinColors.PlinDark.copy(alpha = 0.75f)
                         } else {
-                            PlinColors.PlinDark.copy(alpha = 0.3f)
+                            PlinColors.PlinDark.copy(alpha = 0.5f)
                         }
                     )
 
@@ -125,7 +126,7 @@ fun AddTaskOverlay(
                     val options = listOf("<1", "1", "2", "3", "4", "5+")
                     options.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(text = if(option == "5+") "5+ hours" else if(option == "<1") "Less than 1 hour" else "$option hours", fontFamily = FustatFamily) },
+                            text = { Text(text = if(option == "5+") "5+ hours" else if(option == "<1") "Less than 1 hour" else if(option == "1") "1 hour" else "$option hours", fontFamily = FustatFamily) },
                             onClick = {
                                 duration = when (option) {
                                     "5+" -> 5
