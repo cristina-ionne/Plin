@@ -68,6 +68,10 @@ import com.plin.ui.theme.PlinWhite
 import androidx.compose.animation.*
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.clickable
+
 
 private val CheckGreen = Color(0xFF16A34A)
 
@@ -155,6 +159,7 @@ fun TaskListScreen(
                             showWeek = false,
                             onClick = { viewModel.toggleTaskCompletion(task) },
                             onLongClick = { selectedTaskKey = "${task.id}-${task.instanceNumber}" },
+                            onCompletedChange = { isDone -> viewModel.setCompleted(task, isDone) }
                         )
                     }
                 }
@@ -252,6 +257,7 @@ fun TaskListScreen(
 @Composable
 fun TaskRow(
     task: Task,
+    onCompletedChange: (Boolean) -> Unit, 
     showWeek: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -260,61 +266,84 @@ fun TaskRow(
     val categoryColor = TaskAppearance.colorForCategory(task.category)
     val backgroundColor = TaskAppearance.backgroundForCategory(task.category)
 
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TaskAppearance.shape)
-            .background(backgroundColor)
-            .border(
-                width = TaskAppearance.borderWidth,
-                color = categoryColor.copy(alpha = if (isDone) 0.35f else 0.85f),
-                shape = TaskAppearance.shape,
-            )
+            .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
+            .background(PlinWhite)
+            .border(1.dp, TaskAppearance.borderColor, RoundedCornerShape(TaskAppearance.cornerRadius))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .padding(
-                horizontal = TaskAppearance.contentPaddingHorizontal,
-                vertical = TaskAppearance.contentPaddingVertical,
-            ),
+            .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = task.title,
-                style = MaterialTheme.typography.titleMedium,
-                textDecoration = if (isDone) TextDecoration.LineThrough else null,
-                color = MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = if (isDone) 0.45f else 1f,
-                ),
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = "${task.points} pts",
-                style = MaterialTheme.typography.bodyMedium,
-                color = categoryColor.copy(alpha = if (isDone) 0.45f else 0.9f),
-                modifier = Modifier.padding(start = 8.dp),
-            )
-            if (isDone) {
-                Text(
-                    text = "✓",
-                    color = CheckGreen,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-        }
-        if (showWeek) {
-            Text(
-                text = "${task.assignedWeek.ifEmpty { "—" }} · ${if (isDone) "done" else "open"}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-                modifier = Modifier.padding(top = 4.dp),
+        //Round checkbox
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .background(PlinWhite, CircleShape)
+                .border(1.dp, TaskAppearance.borderColor, CircleShape)
+                .clickable { onCompletedChange(!task.completed) },
+            contentAlignment = Alignment.Center
+    ) {
+        if (task.completed) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_completed_on),
+                contentDescription = "Task completato",
+                modifier = Modifier.size(16.dp)
             )
         }
     }
+        
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Activity and Category
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = task.title,
+                fontSize = 16.sp,
+                fontFamily = FustatFamily,
+                color = TaskAppearance.textColorPrimary
+            )
+            Text(
+                text = "Category", 
+                fontSize = 12.sp,
+                fontFamily = FustatFamily,
+                color = TaskAppearance.textColorSecondary
+            )
+        }
+
+        //Points
+        Text(
+            text = "${task.points} pts",
+            fontSize = 12.sp,
+            fontFamily = FustatFamily,
+            color = TaskAppearance.textColorSecondary
+        )
+    }
 }
+//             if (isDone) {
+//                 Text(
+//                     text = "✓",
+//                     color = CheckGreen,
+//                     fontSize = 18.sp,
+//                     fontWeight = FontWeight.Bold,
+//                     modifier = Modifier.padding(start = 8.dp),
+//                 )
+//             }
+//         }
+//         if (showWeek) {
+//             Text(
+//                 text = "${task.assignedWeek.ifEmpty { "—" }} · ${if (isDone) "done" else "open"}",
+//                 style = MaterialTheme.typography.labelMedium,
+//                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+//                 modifier = Modifier.padding(top = 4.dp),
+//             )
+//         }
+//     }
+// }
 
 /**
  * Form for creating a task. Only user-editable fields — no ids or timestamps.

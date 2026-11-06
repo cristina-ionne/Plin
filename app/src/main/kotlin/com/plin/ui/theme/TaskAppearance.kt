@@ -11,11 +11,14 @@ import com.plin.domain.enums.TaskCategory
  * Color comes from [colorForCategory]; shape/padding are fixed here.
  */
 object TaskAppearance {
-    val cornerRadius: Dp = 12.dp
-    val borderWidth: Dp = 2.dp
+    val cornerRadius: Dp = 24.dp
+    val borderWidth: Dp = 1.dp
     val contentPaddingHorizontal: Dp = 14.dp
     val contentPaddingVertical: Dp = 12.dp
     val shape = RoundedCornerShape(cornerRadius)
+    val borderColor = PlinDark.copy(alpha = 0.3f)
+    val textColorPrimary = PlinDark
+    val textColorSecondary = PlinDark.copy(alpha = 0.75f)
 
     fun colorForCategory(category: TaskCategory): Color = when (category) {
         TaskCategory.GENERIC -> Color(0xA6A6A6)

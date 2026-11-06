@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.plin.ui.theme.TaskAppearance
 
 @Composable
 fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
@@ -34,7 +33,8 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
                 task = task,
                 showWeek = true,
                 onClick = { viewModel.toggleTaskCompletion(task) },
-                onLongClick = { /* Manage here if you want to open the detail view as well */ }
+                onLongClick = { /* Manage here if you want to open the detail view as well */ },
+                onCompletedChange = { isDone -> viewModel.setCompleted(task, isDone) }
             )
         }
     }
