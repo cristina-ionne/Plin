@@ -63,6 +63,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import com.plin.ui.theme.PlinBlue
+import com.plin.ui.theme.PlinWhite
 
 private val CheckGreen = Color(0xFF16A34A)
 
@@ -74,7 +76,7 @@ fun NavBar( //This is the top navigation bar with the logo and profile icon
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFFF0FAFF))
+            .background(PlinWhite)
             .statusBarsPadding()
             .height(97.dp)
             .padding(horizontal = 28.dp),
@@ -153,42 +155,34 @@ fun TaskListScreen(
                     }
                 }
             }
-
         }
 
-        Button(
-            onClick = { /* TODO: add overlay logic */ },
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-            shape = RoundedCornerShape(20.dp),
-            contentPadding = PaddingValues(0.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF55D3FF)
-            )
+                .padding(bottom = 20.dp)
         ) {
-
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Button(
+                onClick = { showAddDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PlinBlue),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-
                 Text(
-                    text = "+ Add a task",
+                    text = "+ Add Task",
                     fontSize = 16.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFF0FAFF)
-                )            
+                    color = PlinWhite 
+                )
             }
-        
         }
+
     }
 
-        
 
     if (showAddDialog) {
         AddTaskDialog(
