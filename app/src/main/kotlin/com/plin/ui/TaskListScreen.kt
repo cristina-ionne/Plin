@@ -71,6 +71,20 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import com.plin.ui.theme.PlinOrange
+import com.plin.ui.theme.PlinWhite
+import kotlin.math.hypot
 
 
 private val CheckGreen = Color(0xFF16A34A)
@@ -262,92 +276,133 @@ fun TaskRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val isDone = task.completed
-    val categoryColor = TaskAppearance.colorForCategory(task.category)
-    val backgroundColor = TaskAppearance.backgroundForCategory(task.category)
+    // 1. Progressive filling animation (from 0f to 1f)
+    val fillProgress by animateFloatAsState(
+        targetValue = if (task.completed) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "liquid_fill_progress"
+    )
 
-    Row(
+    // 2. Text color animation to guarantee maximum readability
+    val titleTextColor by animateColorAsState(
+        targetValue = if (task.completed) PlinWhite else TaskAppearance.textColorPrimary,
+        animationSpec = tween(durationMillis = 300),
+        label = "title_color"
+    )
+    val subTextColor by animateColorAsState(
+        targetValue = if (task.completed) PlinWhite.copy(alpha = 0.8f) else TaskAppearance.textColorSecondary,
+        animationSpec = tween(durationMillis = 300),
+        label = "sub_text_color"
+    )
+
+    // Main card container with the circular wave animation and the click/long-click handlers
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
             .background(PlinWhite)
-            .border(1.dp, TaskAppearance.borderColor, RoundedCornerShape(TaskAppearance.cornerRadius))
+            .border(0.dp, TaskAppearance.borderColor, RoundedCornerShape(TaskAppearance.cornerRadius))
+            .drawWithContent {
+                // A) Draw the default content (background, border, texts, icons) first
+                drawContent()
+
+                // B) If task is completed, draw the circular wave animation on top of the content
+                if (fillProgress > 0f) {
+                    // Checkbox center coordinates (14dp padding + 11dp half dimension of 22dp = 25dp)
+                    val originX = 25.dp.toPx()
+                    val originY = size.height / 2f
+
+                    // Calculate the maximum radius needed to cover the whole card
+                    val maxRadius = hypot(
+                        maxOf(originX, size.width - originX),
+                        maxOf(originY, size.height - originY)
+                    )
+                    val currentRadius = maxRadius * fillProgress
+
+                    drawCircle(
+                        color = PlinOrange,
+                        radius = currentRadius,
+                        center = Offset(originX, originY)
+                    )
+
+                    // Redraw the content over the orange wave (text and icons)
+                    drawContent()
+                }
+            }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .padding(14.dp),
+            .padding(14.dp)
+    ) {
+        Row(
             verticalAlignment = Alignment.CenterVertically
-    ) {
-        //Round checkbox
-        Box(
-            modifier = Modifier
-                .size(22.dp)
-                .background(PlinWhite, CircleShape)
-                .border(1.dp, TaskAppearance.borderColor, CircleShape)
-                .clickable { onCompletedChange(!task.completed) },
-            contentAlignment = Alignment.Center
-    ) {
-        if (task.completed) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_completed_on),
-                contentDescription = "Task completato",
-                modifier = Modifier.size(16.dp)
-            )
-        }
-    }
-        
-        Spacer(modifier = Modifier.width(12.dp))
+        ) {
+            // 3. Checkbox animation: Scale-out for the empty circle and Scale-in for the ic_completed_white icon
+            AnimatedContent(
+                targetState = task.completed,
+                label = "checkbox_animation"
+            ) { isCompleted ->
+                if (isCompleted) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_completed_white),
+                        contentDescription = "Task completed",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .animateEnterExit(
+                                enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
+                                exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                            )
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .background(PlinWhite, CircleShape)
+                            .border(1.dp, TaskAppearance.borderColor, CircleShape)
+                            .clickable { onCompletedChange(!task.completed) }
+                            .animateEnterExit(
+                                enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
+                                exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Empty space for checkbox
+                    }
+                }
+            }
 
-        // Activity and Category
-        Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // 4. Text, title and category
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.title,
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    color = titleTextColor
+                )
+                Text(
+                    text = formatCategory(task.category),
+                    fontSize = 12.sp,
+                    fontFamily = FustatFamily,
+                    color = subTextColor
+                )
+            }
+
+            // 5. Points
             Text(
-                text = task.title,
-                fontSize = 16.sp,
-                fontFamily = FustatFamily,
-                color = TaskAppearance.textColorPrimary
-            )
-            Text(
-                text = "Category", 
+                text = "${task.points} pts",
                 fontSize = 12.sp,
                 fontFamily = FustatFamily,
-                color = TaskAppearance.textColorSecondary
+                color = titleTextColor
             )
         }
-
-        //Points
-        Text(
-            text = "${task.points} pts",
-            fontSize = 12.sp,
-            fontFamily = FustatFamily,
-            color = TaskAppearance.textColorSecondary
-        )
     }
 }
-//             if (isDone) {
-//                 Text(
-//                     text = "✓",
-//                     color = CheckGreen,
-//                     fontSize = 18.sp,
-//                     fontWeight = FontWeight.Bold,
-//                     modifier = Modifier.padding(start = 8.dp),
-//                 )
-//             }
-//         }
-//         if (showWeek) {
-//             Text(
-//                 text = "${task.assignedWeek.ifEmpty { "—" }} · ${if (isDone) "done" else "open"}",
-//                 style = MaterialTheme.typography.labelMedium,
-//                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-//                 modifier = Modifier.padding(top = 4.dp),
-//             )
-//         }
-//     }
-// }
 
-/**
- * Form for creating a task. Only user-editable fields — no ids or timestamps.
- */
+//Form for creating a task. Only user-editable fields — no ids or timestamps.
+
 @Composable
 private fun AddTaskDialog(
     onDismiss: () -> Unit,
