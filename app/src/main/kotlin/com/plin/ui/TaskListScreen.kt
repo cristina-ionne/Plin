@@ -80,8 +80,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import com.plin.ui.theme.PlinColors
 import com.plin.ui.theme.PlinOrange
 import com.plin.ui.theme.PlinWhite
 import kotlin.math.hypot
@@ -253,18 +255,29 @@ fun TaskListScreen(
     }
 
     selectedTask?.let { task ->
-        TaskInspectDialog(
-            task = task,
-            currentWeekKey = currentWeekKey,
-            onDismiss = { selectedTaskKey = null },
-            onUpdate = { updated -> viewModel.updateTask(updated) },
-            onCompletedChange = { completed -> viewModel.setCompleted(task, completed) },
-            onDelete = {
-                viewModel.deleteTask(task)
-                selectedTaskKey = null
-            },
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable { selectedTaskKey = null }
         )
+        
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            EditTaskOverlay(
+                task = task,
+                onDismiss = { selectedTaskKey = null },
+                onSave = { updated -> 
+                    viewModel.updateTask(updated)
+                    selectedTaskKey = null
+                },
+                onDelete = {
+                    viewModel.deleteTask(task)
+                    selectedTaskKey = null
+                }
+            )
+        }
     }
+ 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -500,12 +513,11 @@ private fun CategoryPickerRow(
                 }
             }
         }
+        
     }
 }
 
-/**
- * Inspect window: edit task details (including assigned week), toggle completed, or delete.
- */
+/*
 @Composable
 private fun TaskInspectDialog(
     task: Task,
@@ -520,35 +532,11 @@ private fun TaskInspectDialog(
     var pointsText by remember(task.id, task.instanceNumber) { mutableStateOf(task.points.toString()) }
     var isWeekly by remember(task.id, task.instanceNumber) { mutableStateOf(task.isWeekly) }
     var assignedWeek by remember(task.id, task.instanceNumber) { mutableStateOf(task.assignedWeek) }
-
-    fun saveEditsAndDismiss() {
-        val trimmed = title.trim()
-        val parsedPoints = pointsText.toIntOrNull()?.coerceAtLeast(0) ?: task.points
-        val week = assignedWeek.trim()
-        if (trimmed.isNotEmpty()) {
-            val updated = task.copy(
-                title = trimmed,
-                category = category,
-                points = parsedPoints,
-                isWeekly = isWeekly,
-                assignedWeek = week,
-            )
-            if (
-                updated.title != task.title ||
-                updated.category != task.category ||
-                updated.points != task.points ||
-                updated.isWeekly != task.isWeekly ||
-                updated.assignedWeek != task.assignedWeek
-            ) {
-                onUpdate(updated)
-            }
-        }
-        onDismiss()
-    }
+    var duration by remember(task.id, task.instanceNumber) { mutableIntStateOf(task.duration) }
 
     AlertDialog(
-        onDismissRequest = { saveEditsAndDismiss() },
-        title = { Text("Task details") },
+        onDismissRequest = onDismiss,
+        title = { Text("Edit task") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -561,35 +549,8 @@ private fun TaskInspectDialog(
                 CategoryPickerRow(
                     category = category,
                     onCategoryChange = { category = it },
+                    excludedCategories = setOf(TaskCategory.FRIEND_OF_THE_WEEK),
                 )
-                OutlinedTextField(
-                    value = pointsText,
-                    onValueChange = { value ->
-                        if (value.isEmpty() || value.all { it.isDigit() }) {
-                            pointsText = value
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Points") },
-                )
-                OutlinedTextField(
-                    value = assignedWeek,
-                    onValueChange = { assignedWeek = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Assigned week") },
-                    supportingText = {
-                        Text("e.g. 2026-W35")
-                    },
-                )
-                if (currentWeekKey.isNotEmpty()) {
-                    TextButton(
-                        onClick = { assignedWeek = currentWeekKey },
-                    ) {
-                        Text("Set to current week ($currentWeekKey)")
-                    }
-                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = isWeekly,
@@ -600,32 +561,51 @@ private fun TaskInspectDialog(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = task.completed,
-                        onCheckedChange = onCompletedChange,
-                    )
-                    Text(
-                        text = "Completed",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                DetailRow(value = formatCreatedAt(task.createdAt))
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Remove task",
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PlinColors.PlinOrange,
+                    modifier = Modifier
+                        .clickable { 
+                            onDelete()
+                            onDismiss() 
+                        }
+                        .padding(8.dp)
+                )
             }
+    
         },
         confirmButton = {
-            TextButton(onClick = onDelete) {
-                Text("Delete", color = MaterialTheme.colorScheme.error)
+            TextButton(
+                onClick = {
+                    val trimmed = title.trim()
+                    if (trimmed.isNotEmpty()) {
+                        val updatedTask = task.copy(
+                            title = trimmed,
+                            category = category,
+                            duration = duration
+                        )
+                        onUpdate(updatedTask)
+                        onDismiss()
+                    }
+                },
+            ) {
+                Text("Save")
             }
         },
         dismissButton = {
-            TextButton(onClick = { saveEditsAndDismiss() }) {
-                Text("Close")
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
             }
         },
     )
 }
-
+*/
 @Composable
 private fun DetailRow(value: String) {
     Column {
