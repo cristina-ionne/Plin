@@ -87,6 +87,8 @@ import com.plin.ui.theme.PlinColors
 import com.plin.ui.theme.PlinOrange
 import com.plin.ui.theme.PlinWhite
 import kotlin.math.hypot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 
 
 private val CheckGreen = Color(0xFF16A34A)
@@ -154,7 +156,11 @@ fun TaskListScreen(
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 90.dp)
         ) {
-            TodayCard()
+            TodayCard(
+                onSizeMeasured = { height ->
+                viewModel.todayCardHeight = height
+            }
+            )
             Spacer(modifier = Modifier.height(24.dp))
 
             // Tasks list goes here
@@ -308,6 +314,7 @@ fun TaskRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    
     // 1. Progressive filling animation (from 0f to 1f)
     val fillProgress by animateFloatAsState(
         targetValue = if (task.completed) 1f else 0f,
@@ -570,55 +577,63 @@ private fun formatCreatedAt(epochMillis: Long): String {
 
 
 @Composable
-fun TodayCard() {
+fun TodayCard(onSizeMeasured: (Int) -> Unit) {
+
     val today = LocalDate.now()
     val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
     val dayValue = today.dayOfWeek.value // 1 (Mon) to 7 (Sun)
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFF55D3FF))
-            .padding(24.dp)
+        .fillMaxWidth()
+        .onSizeChanged { size -> onSizeMeasured(size.height)}
     ) {
-        Text(
-            text = dayName,
-            fontSize = 36.sp,
-            fontFamily = FustatFamily,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFFF0FAFF)
-        )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Progress Bar
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(12.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(Color(0xFFF0FAFF))
+                .clip(RoundedCornerShape(24.dp))
+                .background(PlinColors.PlinBlue)
+                .padding(24.dp)
         ) {
+            Text(
+                text = dayName,
+                fontSize = 36.sp,
+                fontFamily = FustatFamily,
+                fontWeight = FontWeight.ExtraBold,
+                color = PlinColors.PlinWhite
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Progress Bar
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(dayValue / 7f)
-                    .fillMaxHeight()
+                    .fillMaxWidth()
+                    .height(12.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFFDD6900))
+                    .background(Color(0xFFF0FAFF))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(dayValue / 7f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFFDD6900))
+                )
+            }
+
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Label "Day X of 7"
+            Text(
+                text = "Day $dayValue of 7",
+                fontSize = 24.sp,
+                fontFamily = FustatFamily,
+                fontWeight = FontWeight.Normal,
+                color = PlinColors.PlinWhite
             )
         }
-
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Label "Day X of 7"
-        Text(
-            text = "Day $dayValue of 7",
-            fontSize = 24.sp,
-            fontFamily = FustatFamily,
-            fontWeight = FontWeight.Normal,
-            color = Color(0xFFF0FAFF)
-        )
     }
 }

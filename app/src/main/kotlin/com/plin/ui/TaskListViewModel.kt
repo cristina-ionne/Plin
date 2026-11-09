@@ -1,6 +1,9 @@
 package com.plin.ui
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.plin.data.FriendOfTheWeekSettingsStore
@@ -29,6 +32,9 @@ import kotlinx.coroutines.launch
  * On start, resolves the current week and runs weekly routines if needed.
  */
 class TaskListViewModel(application: Application) : AndroidViewModel(application) {
+
+    var todayCardHeight by mutableStateOf<Int?>(null)
+
     private val taskService = TaskService(
         PlinDatabase.getInstance(application).taskDao(),
     )
