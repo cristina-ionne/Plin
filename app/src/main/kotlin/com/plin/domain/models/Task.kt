@@ -13,6 +13,7 @@ import com.plin.domain.enums.TaskCategory
 @Entity(tableName = "tasks", primaryKeys = ["id", "instanceNumber"])
 data class Task(
     val id: Long,
+    val duration: Int,
     val instanceNumber: Int = 0,
     val title: String,
     val completed: Boolean = false,

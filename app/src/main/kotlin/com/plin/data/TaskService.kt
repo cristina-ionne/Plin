@@ -34,17 +34,22 @@ class TaskService(private val taskDao: TaskDao) {
         category: TaskCategory,
         isWeekly: Boolean = false,
         assignedWeek: String,
+        duration: Int
     ): Long {
-        val trimmed = title.trim()
-        require(trimmed.isNotEmpty()) { "title is required" }
+        //If the title is empty, use "Task name", otherwise use the title
+        val finalTitle = if (title.isBlank()) "Task name" else title.trim()
+        // If duration is 0 or negative, set it to 1
+        val finalDuration = if (duration <= 0) 1 else duration
+        
         require(assignedWeek.isNotEmpty()) { "assignedWeek is required" }
 
         val taskId = taskDao.getNextTaskId()
         taskDao.insert(
             Task(
                 id = taskId,
+                duration = finalDuration,
                 instanceNumber = 0,
-                title = trimmed,
+                title = finalTitle,
                 category = category,
                 isWeekly = isWeekly,
                 assignedWeek = assignedWeek,
@@ -66,6 +71,7 @@ class TaskService(private val taskDao: TaskDao) {
             category = TaskCategory.FRIEND_OF_THE_WEEK,
             isWeekly = true,
             assignedWeek = week.key,
+            duration = 1
         )
     }
 
@@ -104,6 +110,7 @@ class TaskService(private val taskDao: TaskDao) {
             taskDao.insert(
                 Task(
                     id = taskId,
+                    duration = latest.duration,
                     instanceNumber = latest.instanceNumber + 1,
                     title = latest.title,
                     category = latest.category,
@@ -111,6 +118,7 @@ class TaskService(private val taskDao: TaskDao) {
                     isWeekly = true,
                     completed = false,
                     assignedWeek = currentWeek.key,
+
                 ),
             )
         }

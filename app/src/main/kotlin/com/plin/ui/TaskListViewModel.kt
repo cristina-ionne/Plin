@@ -88,10 +88,15 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun addTask(title: String, category: TaskCategory, isWeekly: Boolean = false) {
+    fun addTask(title: String, category: TaskCategory, isWeekly: Boolean, duration: Int) {
+        //Empty title is not allowed, so we set a default title if the user doesn't provide one
+        val finalTitle = if (title.isBlank()) "Task name" else title
+        //Empty duration is not allowed, so we set a default duration if the user doesn't provide one
+        val finalDuration = if (duration <= 0) 1 else duration
+
         viewModelScope.launch {
             val weekKey = _currentWeek.value?.key ?: WeekCalendar.forDate().key
-            taskService.addTask(title, category, isWeekly, assignedWeek = weekKey)
+            taskService.addTask(title = finalTitle, category = category, isWeekly = isWeekly, assignedWeek = weekKey, duration = finalDuration)
         }
     }
 

@@ -1,14 +1,13 @@
 package com.plin.ui
 
+import FustatFamily
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +20,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -49,27 +47,102 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.res.painterResource
+import com.plin.R
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.layout.ContentScale
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import com.plin.ui.theme.PlinBlue
+import com.plin.ui.theme.PlinWhite
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import com.plin.ui.theme.PlinColors
+import com.plin.ui.theme.PlinOrange
+import com.plin.ui.theme.PlinWhite
+import kotlin.math.hypot
+
 
 private val CheckGreen = Color(0xFF16A34A)
 
-/**
- * Main Plin screen: current-week list or full archive, with add / inspect dialogs.
- *
- * Short click toggles completed; long press opens the inspect dialog.
- */
+@Composable
+fun NavBar( //This is the top navigation bar with the logo and profile icon
+    modifier: Modifier = Modifier,
+    onProfileClick: () -> Unit = {}
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(PlinWhite)
+            .statusBarsPadding()
+            .height(97.dp)
+            .padding(horizontal = 28.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Logo()
+        Profile(onClick = onProfileClick)
+    }
+}
+
+@Composable
+fun Logo() {
+    Image(
+        painter = painterResource(R.drawable.logo),
+        contentDescription = "Logo",
+        modifier = Modifier.height(40.dp),
+        contentScale = ContentScale.Fit
+    )
+}
+
+@Composable
+fun Profile(onClick: () -> Unit) {
+    Image(
+        painter = painterResource(R.drawable.ic_profile),
+        contentDescription = "Profile",
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+    )
+}
 @Composable
 fun TaskListScreen(
-    onOpenSettings: () -> Unit,
     viewModel: TaskListViewModel = viewModel(),
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val currentWeek by viewModel.currentWeek.collectAsStateWithLifecycle()
-    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedTaskKey by remember { mutableStateOf<String?>(null) }
     val selectedTask = tasks.find { "${it.id}-${it.instanceNumber}" == selectedTaskKey }
-    val isArchive = selectedTab == TaskListTab.ARCHIVE
     val currentWeekKey = currentWeek?.key.orEmpty()
+    var showAddOverlay by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.refreshMainView()
@@ -78,206 +151,296 @@ fun TaskListScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 48.dp),
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 90.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Plin",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                TextButton(onClick = onOpenSettings) {
-                    Text(
-                        text = "⚙",
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                }
-            }
-            if (isArchive) {
-                Text(
-                    text = "Archive",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-                )
-                Text(
-                    text = "Past weeks only. Set assigned week to the current week to restore.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                )
-            } else {
-                currentWeek?.let { week ->
-                    Text(
-                        text = week.displayLabel,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-                    )
-                }
-                Text(
-                    text = "Tap to toggle done · long-press for details.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                )
-            }
-
+            TodayCard()
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Tasks list goes here
             if (tasks.isEmpty()) {
                 Text(
-                    text = if (isArchive) "No tasks in archive." else "No tasks yet.",
+                    text = "No tasks yet.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 )
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = PlinFabBottomPadding + 56.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
                     items(tasks, key = { "${it.id}-${it.instanceNumber}" }) { task ->
                         TaskRow(
                             task = task,
-                            showWeek = isArchive,
+                            showWeek = false,
                             onClick = { viewModel.toggleTaskCompletion(task) },
                             onLongClick = { selectedTaskKey = "${task.id}-${task.instanceNumber}" },
+                            onCompletedChange = { isDone -> viewModel.setCompleted(task, isDone) }
                         )
                     }
                 }
             }
         }
 
-        FloatingActionButton(
-            onClick = { viewModel.toggleTab() },
+        Column(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 20.dp, end = 20.dp, bottom = PlinFabBottomPadding),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp)
         ) {
-            Text(
-                text = if (isArchive) "Week" else "Archive",
-                modifier = Modifier.padding(horizontal = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
-
-        if (!isArchive) {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
+            Button(
+                onClick = { showAddOverlay = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PlinBlue),
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(start = 20.dp, end = 20.dp, bottom = PlinFabBottomPadding),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Add",
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    style = MaterialTheme.typography.labelLarge,
+                    text = "+ Add Task",
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PlinWhite 
                 )
             }
         }
-    }
+
+            //Animations for the overlay and background dimming when adding a task
+            //Black background dimming with fade in/out animation
+            AnimatedVisibility(
+                visible = showAddOverlay,
+                enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 300))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .clickable { showAddOverlay = false }
+                )
+            }
+
+            //Add Task Overlay with scale and fade in/out animation
+            AnimatedVisibility(
+                visible = showAddOverlay,
+                enter = scaleIn(
+                    initialScale = 0.8f, 
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(), 
+                    contentAlignment = Alignment.Center
+                ) {
+                    AddTaskOverlay(
+                        onDismiss = { showAddOverlay = false },
+                        onSave = { title, category, isWeekly, duration ->
+                            viewModel.addTask(title, category, isWeekly, duration)
+                            showAddOverlay = false
+                        }
+                    )
+                }
+            }
+        }
 
     if (showAddDialog) {
         AddTaskDialog(
             onDismiss = { showAddDialog = false },
             onSave = { title, category, isWeekly ->
-                viewModel.addTask(title, category, isWeekly)
+                viewModel.addTask(title, category, isWeekly, duration = 1) // Default duration to 1 hour
                 showAddDialog = false
             },
         )
     }
 
-    selectedTask?.let { task ->
-        TaskInspectDialog(
-            task = task,
-            currentWeekKey = currentWeekKey,
-            onDismiss = { selectedTaskKey = null },
-            onUpdate = { updated -> viewModel.updateTask(updated) },
-            onCompletedChange = { completed -> viewModel.setCompleted(task, completed) },
-            onDelete = {
-                viewModel.deleteTask(task)
-                selectedTaskKey = null
-            },
+    //Animations for the overlay and background dimming when editing a task
+    //Black background dimming with fade in/out animation
+    AnimatedVisibility(
+        visible = selectedTask != null,
+        enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 300))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable { selectedTaskKey = null }
         )
     }
+
+    //Edit Task Overlay with scale and fade in/out animation
+    AnimatedVisibility(
+        visible = selectedTask != null,
+        enter = scaleIn(
+            initialScale = 0.8f, 
+            animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+        ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+        exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            selectedTask?.let { task ->
+                EditTaskOverlay(
+                    task = task,
+                    onDismiss = { selectedTaskKey = null },
+                    onSave = { updated -> 
+                        viewModel.updateTask(updated)
+                        selectedTaskKey = null
+                    },
+                    onDelete = {
+                        viewModel.deleteTask(task)
+                        selectedTaskKey = null
+                    }
+                )
+            }
+        }
+    }
+ 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TaskRow(
+fun TaskRow(
     task: Task,
+    onCompletedChange: (Boolean) -> Unit, 
     showWeek: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val isDone = task.completed
-    val categoryColor = TaskAppearance.colorForCategory(task.category)
-    val backgroundColor = TaskAppearance.backgroundForCategory(task.category)
+    // 1. Progressive filling animation (from 0f to 1f)
+    val fillProgress by animateFloatAsState(
+        targetValue = if (task.completed) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "liquid_fill_progress"
+    )
 
-    Column(
+    // 2. Text color animation to guarantee maximum readability
+    val titleTextColor by animateColorAsState(
+        targetValue = if (task.completed) PlinWhite else TaskAppearance.textColorPrimary,
+        animationSpec = tween(durationMillis = 300),
+        label = "title_color"
+    )
+    val subTextColor by animateColorAsState(
+        targetValue = if (task.completed) PlinWhite.copy(alpha = 0.8f) else TaskAppearance.textColorSecondary,
+        animationSpec = tween(durationMillis = 300),
+        label = "sub_text_color"
+    )
+    val categoryTextColor by animateColorAsState(
+    targetValue = if (task.completed) PlinWhite else task.category.color,
+    animationSpec = tween(durationMillis = 300),
+    label = "category_color"
+)
+
+    // Main card container with the circular wave animation and the click/long-click handlers
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TaskAppearance.shape)
-            .background(backgroundColor)
-            .border(
-                width = TaskAppearance.borderWidth,
-                color = categoryColor.copy(alpha = if (isDone) 0.35f else 0.85f),
-                shape = TaskAppearance.shape,
-            )
+            .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
+            .background(PlinWhite)
+            .border(0.dp, TaskAppearance.borderColor, RoundedCornerShape(TaskAppearance.cornerRadius))
+            .drawWithContent {
+                // A) Draw the default content (background, border, texts, icons) first
+                drawContent()
+
+                // B) If task is completed, draw the circular wave animation on top of the content
+                if (fillProgress > 0f) {
+                    // Checkbox center coordinates (14dp padding + 11dp half dimension of 22dp = 25dp)
+                    val originX = 25.dp.toPx()
+                    val originY = size.height / 2f
+
+                    // Calculate the maximum radius needed to cover the whole card
+                    val maxRadius = hypot(
+                        maxOf(originX, size.width - originX),
+                        maxOf(originY, size.height - originY)
+                    )
+                    val currentRadius = maxRadius * fillProgress
+
+                    drawCircle(
+                        color = PlinOrange,
+                        radius = currentRadius,
+                        center = Offset(originX, originY)
+                    )
+
+                    // Redraw the content over the orange wave (text and icons)
+                    drawContent()
+                }
+            }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .padding(
-                horizontal = TaskAppearance.contentPaddingHorizontal,
-                vertical = TaskAppearance.contentPaddingVertical,
-            ),
+            .padding(14.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = task.title,
-                style = MaterialTheme.typography.titleMedium,
-                textDecoration = if (isDone) TextDecoration.LineThrough else null,
-                color = MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = if (isDone) 0.45f else 1f,
-                ),
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = "${task.points} pts",
-                style = MaterialTheme.typography.bodyMedium,
-                color = categoryColor.copy(alpha = if (isDone) 0.45f else 0.9f),
-                modifier = Modifier.padding(start = 8.dp),
-            )
-            if (isDone) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 3. Checkbox animation: Scale-out for the empty circle and Scale-in for the ic_completed_white icon
+            AnimatedContent(
+                targetState = task.completed,
+                label = "checkbox_animation"
+            ) { isCompleted ->
+                if (isCompleted) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_completed_white),
+                        contentDescription = "Task completed",
+                        modifier = Modifier
+                            .size(22.dp)
+                            .animateEnterExit(
+                                enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
+                                exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                            )
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .background(PlinWhite, CircleShape)
+                            .border(1.dp, TaskAppearance.borderColor, CircleShape)
+                            .clickable { onCompletedChange(!task.completed) }
+                            .animateEnterExit(
+                                enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
+                                exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Empty space for checkbox
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // 4. Text, title and category
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "✓",
-                    color = CheckGreen,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp),
+                    text = task.title,
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    color = titleTextColor
+                )
+                Text(
+                    text = formatCategory(task.category),
+                    fontSize = 12.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = categoryTextColor,
                 )
             }
-        }
-        if (showWeek) {
+
+            // 5. Points
             Text(
-                text = "${task.assignedWeek.ifEmpty { "—" }} · ${if (isDone) "done" else "open"}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-                modifier = Modifier.padding(top = 4.dp),
+                text = "${task.points} pts",
+                fontSize = 12.sp,
+                fontFamily = FustatFamily,
+                color = titleTextColor
             )
         }
     }
 }
 
-/**
- * Form for creating a task. Only user-editable fields — no ids or timestamps.
- */
+//Form for creating a task. Only user-editable fields — no ids or timestamps.
+
 @Composable
 private fun AddTaskDialog(
     onDismiss: () -> Unit,
@@ -375,137 +538,16 @@ private fun CategoryPickerRow(
                 }
             }
         }
+        
     }
 }
 
-/**
- * Inspect window: edit task details (including assigned week), toggle completed, or delete.
- */
-@Composable
-private fun TaskInspectDialog(
-    task: Task,
-    currentWeekKey: String,
-    onDismiss: () -> Unit,
-    onUpdate: (Task) -> Unit,
-    onCompletedChange: (Boolean) -> Unit,
-    onDelete: () -> Unit,
-) {
-    var title by remember(task.id, task.instanceNumber) { mutableStateOf(task.title) }
-    var category by remember(task.id, task.instanceNumber) { mutableStateOf(task.category) }
-    var pointsText by remember(task.id, task.instanceNumber) { mutableStateOf(task.points.toString()) }
-    var isWeekly by remember(task.id, task.instanceNumber) { mutableStateOf(task.isWeekly) }
-    var assignedWeek by remember(task.id, task.instanceNumber) { mutableStateOf(task.assignedWeek) }
-
-    fun saveEditsAndDismiss() {
-        val trimmed = title.trim()
-        val parsedPoints = pointsText.toIntOrNull()?.coerceAtLeast(0) ?: task.points
-        val week = assignedWeek.trim()
-        if (trimmed.isNotEmpty()) {
-            val updated = task.copy(
-                title = trimmed,
-                category = category,
-                points = parsedPoints,
-                isWeekly = isWeekly,
-                assignedWeek = week,
-            )
-            if (
-                updated.title != task.title ||
-                updated.category != task.category ||
-                updated.points != task.points ||
-                updated.isWeekly != task.isWeekly ||
-                updated.assignedWeek != task.assignedWeek
-            ) {
-                onUpdate(updated)
-            }
-        }
-        onDismiss()
-    }
-
-    AlertDialog(
-        onDismissRequest = { saveEditsAndDismiss() },
-        title = { Text("Task details") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Name") },
-                )
-                CategoryPickerRow(
-                    category = category,
-                    onCategoryChange = { category = it },
-                )
-                OutlinedTextField(
-                    value = pointsText,
-                    onValueChange = { value ->
-                        if (value.isEmpty() || value.all { it.isDigit() }) {
-                            pointsText = value
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Points") },
-                )
-                OutlinedTextField(
-                    value = assignedWeek,
-                    onValueChange = { assignedWeek = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Assigned week") },
-                    supportingText = {
-                        Text("e.g. 2026-W35")
-                    },
-                )
-                if (currentWeekKey.isNotEmpty()) {
-                    TextButton(
-                        onClick = { assignedWeek = currentWeekKey },
-                    ) {
-                        Text("Set to current week ($currentWeekKey)")
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = isWeekly,
-                        onCheckedChange = { isWeekly = it },
-                    )
-                    Text(
-                        text = "Repeat every week",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = task.completed,
-                        onCheckedChange = onCompletedChange,
-                    )
-                    Text(
-                        text = "Completed",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                DetailRow(label = "Created", value = formatCreatedAt(task.createdAt))
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDelete) {
-                Text("Delete", color = MaterialTheme.colorScheme.error)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { saveEditsAndDismiss() }) {
-                Text("Close")
-            }
-        },
-    )
-}
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun DetailRow(value: String) {
     Column {
         Text(
-            text = label,
+            text = "Created",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
@@ -524,4 +566,59 @@ private fun formatCreatedAt(epochMillis: Long): String {
         .ofLocalizedDateTime(FormatStyle.MEDIUM)
         .withZone(ZoneId.systemDefault())
     return formatter.format(Instant.ofEpochMilli(epochMillis))
+}
+
+
+@Composable
+fun TodayCard() {
+    val today = LocalDate.now()
+    val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+    val dayValue = today.dayOfWeek.value // 1 (Mon) to 7 (Sun)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFF55D3FF))
+            .padding(24.dp)
+    ) {
+        Text(
+            text = dayName,
+            fontSize = 36.sp,
+            fontFamily = FustatFamily,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFFF0FAFF)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Progress Bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color(0xFFF0FAFF))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(dayValue / 7f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color(0xFFDD6900))
+            )
+        }
+
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Label "Day X of 7"
+        Text(
+            text = "Day $dayValue of 7",
+            fontSize = 24.sp,
+            fontFamily = FustatFamily,
+            fontWeight = FontWeight.Normal,
+            color = Color(0xFFF0FAFF)
+        )
+    }
 }
