@@ -206,7 +206,8 @@ fun TaskListScreen(
             }
         }
 
-
+            //Animations for the overlay and background dimming when adding a task
+            //Black background dimming with fade in/out animation
             AnimatedVisibility(
                 visible = showAddOverlay,
                 enter = fadeIn(animationSpec = tween(durationMillis = 300)),
@@ -220,7 +221,7 @@ fun TaskListScreen(
                 )
             }
 
-
+            //Add Task Overlay with scale and fade in/out animation
             AnimatedVisibility(
                 visible = showAddOverlay,
                 enter = scaleIn(
@@ -254,27 +255,45 @@ fun TaskListScreen(
         )
     }
 
-    selectedTask?.let { task ->
+    //Animations for the overlay and background dimming when editing a task
+    //Black background dimming with fade in/out animation
+    AnimatedVisibility(
+        visible = selectedTask != null,
+        enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 300))
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
                 .clickable { selectedTaskKey = null }
         )
-        
+    }
+
+    //Edit Task Overlay with scale and fade in/out animation
+    AnimatedVisibility(
+        visible = selectedTask != null,
+        enter = scaleIn(
+            initialScale = 0.8f, 
+            animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+        ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+        exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+    ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            EditTaskOverlay(
-                task = task,
-                onDismiss = { selectedTaskKey = null },
-                onSave = { updated -> 
-                    viewModel.updateTask(updated)
-                    selectedTaskKey = null
-                },
-                onDelete = {
-                    viewModel.deleteTask(task)
-                    selectedTaskKey = null
-                }
-            )
+            selectedTask?.let { task ->
+                EditTaskOverlay(
+                    task = task,
+                    onDismiss = { selectedTaskKey = null },
+                    onSave = { updated -> 
+                        viewModel.updateTask(updated)
+                        selectedTaskKey = null
+                    },
+                    onDelete = {
+                        viewModel.deleteTask(task)
+                        selectedTaskKey = null
+                    }
+                )
+            }
         }
     }
  
@@ -307,6 +326,11 @@ fun TaskRow(
         animationSpec = tween(durationMillis = 300),
         label = "sub_text_color"
     )
+    val categoryTextColor by animateColorAsState(
+    targetValue = if (task.completed) PlinWhite else task.category.color,
+    animationSpec = tween(durationMillis = 300),
+    label = "category_color"
+)
 
     // Main card container with the circular wave animation and the click/long-click handlers
     Box(
@@ -399,7 +423,8 @@ fun TaskRow(
                     text = formatCategory(task.category),
                     fontSize = 12.sp,
                     fontFamily = FustatFamily,
-                    color = subTextColor
+                    fontWeight = FontWeight.ExtraBold,
+                    color = categoryTextColor,
                 )
             }
 
@@ -517,95 +542,7 @@ private fun CategoryPickerRow(
     }
 }
 
-/*
-@Composable
-private fun TaskInspectDialog(
-    task: Task,
-    currentWeekKey: String,
-    onDismiss: () -> Unit,
-    onUpdate: (Task) -> Unit,
-    onCompletedChange: (Boolean) -> Unit,
-    onDelete: () -> Unit,
-) {
-    var title by remember(task.id, task.instanceNumber) { mutableStateOf(task.title) }
-    var category by remember(task.id, task.instanceNumber) { mutableStateOf(task.category) }
-    var pointsText by remember(task.id, task.instanceNumber) { mutableStateOf(task.points.toString()) }
-    var isWeekly by remember(task.id, task.instanceNumber) { mutableStateOf(task.isWeekly) }
-    var assignedWeek by remember(task.id, task.instanceNumber) { mutableStateOf(task.assignedWeek) }
-    var duration by remember(task.id, task.instanceNumber) { mutableIntStateOf(task.duration) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit task") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Name") },
-                )
-                CategoryPickerRow(
-                    category = category,
-                    onCategoryChange = { category = it },
-                    excludedCategories = setOf(TaskCategory.FRIEND_OF_THE_WEEK),
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = isWeekly,
-                        onCheckedChange = { isWeekly = it },
-                    )
-                    Text(
-                        text = "Repeat every week",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Remove task",
-                    fontSize = 16.sp,
-                    fontFamily = FustatFamily,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = PlinColors.PlinOrange,
-                    modifier = Modifier
-                        .clickable { 
-                            onDelete()
-                            onDismiss() 
-                        }
-                        .padding(8.dp)
-                )
-            }
-    
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = title.trim()
-                    if (trimmed.isNotEmpty()) {
-                        val updatedTask = task.copy(
-                            title = trimmed,
-                            category = category,
-                            duration = duration
-                        )
-                        onUpdate(updatedTask)
-                        onDismiss()
-                    }
-                },
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
-}
-*/
 @Composable
 private fun DetailRow(value: String) {
     Column {

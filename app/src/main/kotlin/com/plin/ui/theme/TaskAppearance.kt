@@ -21,16 +21,16 @@ object TaskAppearance {
     val textColorSecondary = PlinDark.copy(alpha = 0.75f)
 
     fun colorForCategory(category: TaskCategory): Color = when (category) {
-        TaskCategory.GENERIC -> Color(0xA6A6A6)
-        TaskCategory.FUN -> Color(0xD253D4)
-        TaskCategory.PERSONAL_DEVELOPMENT -> Color(0x7E34BE)
-        TaskCategory.SOCIAL_ACTIVITY -> Color(0x18C09E)
-        TaskCategory.CHORE -> Color(0xE3912D)
-        TaskCategory.ADULTING -> Color(0x2EB516)
-        TaskCategory.SPORT -> Color(0x1437D5)
-        TaskCategory.HEALTH -> Color(0xCF3A4B)
-        TaskCategory.SPECIAL -> Color(0x12F9E6)
-        TaskCategory.FRIEND_OF_THE_WEEK -> Color(0xF5A623)
+        TaskCategory.GENERIC -> PlinColors.PlinBlue
+        TaskCategory.FUN -> PlinColors.PlinPurple
+        TaskCategory.PERSONAL_DEVELOPMENT -> PlinColors.PlinGreen
+        TaskCategory.SOCIAL_ACTIVITY -> PlinColors.PlinTeal
+        TaskCategory.CHORE -> PlinColors.PlinBrown
+        TaskCategory.ADULTING -> PlinColors.PlinGrey
+        TaskCategory.SPORT -> PlinColors.PlinDarkBlue
+        TaskCategory.HEALTH -> PlinColors.PlinRed
+        TaskCategory.SPECIAL -> PlinFuchsia
+        TaskCategory.FRIEND_OF_THE_WEEK -> PlinColors.PlinYellow
     }
 
     fun backgroundForCategory(category: TaskCategory): Color =

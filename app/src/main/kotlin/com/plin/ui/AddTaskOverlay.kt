@@ -25,6 +25,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.heightIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +38,8 @@ fun AddTaskOverlay(
     var duration by remember { mutableIntStateOf(0) }
     var isWeekly by remember { mutableStateOf(false) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
+    var isCategoryDropdownExpanded by remember { mutableStateOf(false) }
+
 
     AnimatedVisibility(
         visible = true,
@@ -70,8 +73,70 @@ fun AddTaskOverlay(
 
             // Category
             Text(text = "Category", fontSize = 14.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
-            Text(text = category.name, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = PlinColors.PlinBlue, modifier = Modifier.clickable { /* Category logic */ })
-            Spacer(modifier = Modifier.height(16.dp))
+            
+            //Category menu
+            ExposedDropdownMenuBox(
+                expanded = isCategoryDropdownExpanded,
+                onExpandedChange = { isCategoryDropdownExpanded = !isCategoryDropdownExpanded }
+            ) {
+                // Clickable
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(30.dp)
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .clickable { isCategoryDropdownExpanded = true }
+                ) {
+                    Text(
+                        text = category.toDisplayString(),
+                        color = category.color,
+                        fontSize = 16.sp,
+                        fontFamily = FustatFamily,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+
+                // Menu
+                ExposedDropdownMenu(
+                    expanded = isCategoryDropdownExpanded,
+                    onDismissRequest = { isCategoryDropdownExpanded = false },
+                    containerColor = PlinColors.PlinWhite,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                    .border(1.dp, PlinColors.PlinDark.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                    .heightIn(max = 205.dp)
+
+                ) {
+                    // Menu items
+                    TaskCategory.entries.forEach { cat ->
+                        DropdownMenuItem(
+                            text = { 
+                                Text(
+                                    text = cat.toDisplayString(),
+                                    color = cat.color, 
+                                    fontFamily = FustatFamily,
+                                    fontWeight = FontWeight.ExtraBold
+                                ) 
+                            },
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
+                            onClick = {
+                                category = cat
+                                isCategoryDropdownExpanded = false
+                            },
+                            colors = MenuDefaults.itemColors(
+                                textColor = PlinColors.PlinDark.copy(alpha = 0.75f)
+                            )
+                        )
+                        // Add divider between items except for the last one
+                        if (cat != TaskCategory.entries.last()) {
+                            HorizontalDivider(modifier = Modifier
+                            .padding(horizontal = 18.dp))
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Duration Dropdown
             Text(text = "Duration", fontSize = 14.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
@@ -121,7 +186,8 @@ fun AddTaskOverlay(
                     onDismissRequest = { isDropdownExpanded = false },
                     containerColor = PlinColors.PlinWhite,
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.border(1.dp, PlinColors.PlinDark.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                    modifier = Modifier.border(1.dp, PlinColors.PlinDark.copy(alpha = 0.2f), RoundedCornerShape(12.dp)) .heightIn(max = 205.dp)
+
                 ) {
                     val options = listOf("<1", "1", "2", "3", "4", "5+")
                     options.forEach { option ->
