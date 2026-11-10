@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.*
+import androidx.compose.runtime.mutableIntStateOf
+import com.plin.ui.theme.PlinColors
 
 private enum class PlinScreen {
     TASK_LIST,
@@ -24,15 +26,23 @@ private enum class PlinScreen {
     REWARDS
 }
 
+private fun BottomNavigationSection.toIndex(): Int = when (this) {
+    BottomNavigationSection.Home -> 0
+    BottomNavigationSection.Completed -> 1
+    BottomNavigationSection.Friends -> 2
+    BottomNavigationSection.Rewards -> 3
+}
+
 @Composable
 fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
     
     var showSettingsOverlay by remember { mutableStateOf(false) }
-
     var screen by remember { mutableStateOf(PlinScreen.TASK_LIST) }
-    
     // State to manage the currently selected section in the bottom navigation
     var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
+
+    // Status to track previous index
+    var previousIndex by remember { mutableIntStateOf(0) }
       
     Column(modifier = Modifier.fillMaxSize()) {
     // 1. Upper Navbar
@@ -43,21 +53,33 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
         modifier = Modifier
         .weight(1f)
         .fillMaxSize()
-        .background(Color(0xFFF0FAFF))
+        .background(PlinColors.PlinWhite)
         ) {
         
         // A. Main content ('when')
-        when (screen) {
-            PlinScreen.TASK_LIST -> TaskListScreen()
-            PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
-            PlinScreen.REWARDS -> RewardsScreen(viewModel)
-            PlinScreen.FRIENDS -> FriendsScreen()
-            PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(onHome = { screen = PlinScreen.TASK_LIST },
-                    // First you had: onBack = { screen = PlinScreen.SETTINGS },
-                    // Now you go back to the list (or to the overlay, depending on what you prefer):
-                    onBack = { screen = PlinScreen.TASK_LIST },)
-        }
-
+        val targetIndex = currentBottomSection.toIndex()
+            
+            AnimatedContent(
+                targetState = screen,
+                transitionSpec = {
+                    val direction = if (targetIndex > previousIndex) 1 else -1
+                    (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith
+                    (slideOutHorizontally(targetOffsetX = { it * -direction }) + fadeOut())
+                },
+                label = "screen_slide"
+            ) { targetScreen ->
+                when (targetScreen) {
+                    PlinScreen.TASK_LIST -> TaskListScreen()
+                    PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
+                    PlinScreen.REWARDS -> RewardsScreen(viewModel)
+                    PlinScreen.FRIENDS -> FriendsScreen()
+                    PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(
+                        onHome = { screen = PlinScreen.TASK_LIST },
+                        onBack = { screen = PlinScreen.TASK_LIST }
+                    )
+                }
+            }
+       
         // B. Animation over the 'when'
         androidx.compose.animation.AnimatedVisibility(
             visible = showSettingsOverlay,
@@ -78,6 +100,8 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
         BottomNavigation(
             currentSection = currentBottomSection,
             onSectionSelected = { section ->
+                // Update index before changing screen
+                previousIndex = currentBottomSection.toIndex()
                 showSettingsOverlay = false
                 currentBottomSection = section
                 // Manage the action on section change:
