@@ -633,7 +633,7 @@ fun TodayCard(onSizeMeasured: (Int) -> Unit) {
             // Label "Day X of 7"
             Text(
                 text = "Day $dayValue of 7",
-                fontSize = 24.sp,
+                fontSize = 16.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.Normal,
                 color = PlinColors.PlinWhite

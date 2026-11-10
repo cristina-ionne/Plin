@@ -20,7 +20,8 @@ private enum class PlinScreen {
     TASK_LIST,
     FRIEND_OF_THE_WEEK_SETTINGS,
     COMPLETED_SCREEN,
-    FRIENDS
+    FRIENDS,
+    REWARDS
 }
 
 @Composable
@@ -49,7 +50,8 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
         when (screen) {
             PlinScreen.TASK_LIST -> TaskListScreen()
             PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
-            PlinScreen.FRIENDS -> FriendsScreen(todayCardHeight = viewModel.todayCardHeight)
+            PlinScreen.REWARDS -> RewardsScreen(viewModel)
+            PlinScreen.FRIENDS -> FriendsScreen()
             PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(onHome = { screen = PlinScreen.TASK_LIST },
                     // First you had: onBack = { screen = PlinScreen.SETTINGS },
                     // Now you go back to the list (or to the overlay, depending on what you prefer):
@@ -89,7 +91,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
                         screen = PlinScreen.COMPLETED_SCREEN
                     }
                     BottomNavigationSection.Friends -> { screen = PlinScreen.FRIENDS }
-                    BottomNavigationSection.Rewards -> { /* Navigate to Rewards screen */ }
+                    BottomNavigationSection.Rewards -> { screen = PlinScreen.REWARDS }
                 }
             }
         )
