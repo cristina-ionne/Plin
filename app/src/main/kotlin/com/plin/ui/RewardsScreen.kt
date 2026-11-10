@@ -1,13 +1,10 @@
 package com.plin.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -28,25 +25,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import FustatFamily
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.plin.R
-import com.plin.ui.theme.PlinBlue
-import com.plin.ui.theme.PlinWhite
 
 
 @Composable
 fun RewardsScreen(viewModel: TaskListViewModel = viewModel()) {
+
+    val totalPoints by viewModel.totalPoints.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -54,7 +43,7 @@ fun RewardsScreen(viewModel: TaskListViewModel = viewModel()) {
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 90.dp)
         ) {
-            RewardsCard()
+            RewardsCard(totalPoints = totalPoints)
             Spacer(modifier = Modifier.height(24.dp))
 
             // Rewards list goes here
@@ -70,7 +59,7 @@ fun RewardsScreen(viewModel: TaskListViewModel = viewModel()) {
 
 
 @Composable
-fun RewardsCard(fixedHeight: Int? = null) {
+fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
 
     val density = LocalDensity.current
 
@@ -96,7 +85,7 @@ fun RewardsCard(fixedHeight: Int? = null) {
         Text(
             text = "Use your points to claim your rewards.",
             fontSize = 18.sp,
-            lineHeight = 18.sp,
+            lineHeight = 24.sp,
             fontFamily = FustatFamily,
             fontWeight = FontWeight.Normal,
             color = PlinColors.PlinWhite
@@ -109,14 +98,32 @@ fun RewardsCard(fixedHeight: Int? = null) {
                 .wrapContentSize()
                 .padding(top = 8.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinWhite)
+                .background(PlinColors.PlinWhite.copy(alpha = 0.6f))
 
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 8.dp)
             ) {
                 Image(painter = painterResource(id = R.drawable.ic_star), contentDescription = "Points")
+
+                Text(
+                    text = "$totalPoints",
+                    color = PlinColors.PlinOrange,
+                    fontSize = 24.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+
+                Text (
+                    text = "points",
+                    color = PlinColors.PlinOrange,
+                    fontSize = 18.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
         }
 

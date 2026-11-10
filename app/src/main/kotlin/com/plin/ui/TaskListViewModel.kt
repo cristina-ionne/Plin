@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 
 /**
  * Holds UI state for the task list and talks to [TaskService].
@@ -63,11 +64,21 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
                 else -> taskService.observeTasksForWeek(week)
             }
         }
+        
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList(),
         )
+        
+    //Calculate total points
+    val totalPoints: StateFlow<Int> = tasks.map { taskList ->
+        taskList.filter { it.completed }.sumOf { it.points }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0
+    )
 
     fun refreshMainView() {
         viewModelScope.launch {
