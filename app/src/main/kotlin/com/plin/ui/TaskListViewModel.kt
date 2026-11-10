@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
  */
 class TaskListViewModel(application: Application) : AndroidViewModel(application) {
 
+    //To give the same height to all the welcome cards
     var todayCardHeight by mutableStateOf<Int?>(null)
 
     private val taskService = TaskService(

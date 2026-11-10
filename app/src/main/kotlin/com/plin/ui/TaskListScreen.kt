@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,25 +68,21 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.clickable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import com.plin.ui.theme.PlinColors
 import com.plin.ui.theme.PlinOrange
-import com.plin.ui.theme.PlinWhite
 import kotlin.math.hypot
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 
 
@@ -145,10 +140,18 @@ fun TaskListScreen(
     val selectedTask = tasks.find { "${it.id}-${it.instanceNumber}" == selectedTaskKey }
     val currentWeekKey = currentWeek?.key.orEmpty()
     var showAddOverlay by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.refreshMainView()
     }
+
+    LaunchedEffect(tasks.size) {
+    if (tasks.isNotEmpty()) {
+        listState.animateScrollToItem(0)
+    }
+}
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -172,6 +175,7 @@ fun TaskListScreen(
                 )
             } else {
                 LazyColumn(
+                    state = listState,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
