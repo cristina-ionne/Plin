@@ -1,6 +1,5 @@
 package com.plin.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.plin.ui.theme.FustatFamily
@@ -75,38 +73,4 @@ fun FriendsScreen() {
     }
 }
 
-
-
-    @Composable
-    fun RelationshipCard() {
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinOrange)
-                .padding(top = 20.dp, start= 24.dp, end = 24.dp, bottom = 16.dp)
-        ) {
-            Text(
-                text = "Relationships are important!",
-                fontSize = 36.sp,
-                lineHeight = 36.sp,
-                fontFamily = FustatFamily,
-                fontWeight = FontWeight.ExtraBold,
-                color = PlinColors.PlinWhite
-            )
-
-
-            //Subtitle
-            Text(
-                text = "Don't forget to take good care of them.",
-                fontSize = 18.sp,
-                lineHeight = 18.sp,
-                fontFamily = FustatFamily,
-                fontWeight = FontWeight.Normal,
-                color = PlinColors.PlinWhite,
-                modifier = Modifier.padding(top = 24.dp)
-            )
-        }
-    }
 

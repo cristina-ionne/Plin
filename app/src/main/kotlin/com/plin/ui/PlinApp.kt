@@ -78,7 +78,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
                 )
             }
         }
-       
+
         // B. Animation over the 'when'
         androidx.compose.animation.AnimatedVisibility(
             visible = showSettingsOverlay,
@@ -89,7 +89,6 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
         )
         ) {
             SettingsOverlay(
-                onDismiss = { showSettingsOverlay = false },
                 onNavigateToCategories = { showSettingsOverlay = false }
             )
         }
