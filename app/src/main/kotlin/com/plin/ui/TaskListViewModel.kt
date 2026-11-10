@@ -20,7 +20,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -48,10 +47,8 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
     )
 
     private val _currentWeek = MutableStateFlow<WeekLayout?>(null)
-    val currentWeek: StateFlow<WeekLayout?> = _currentWeek.asStateFlow()
 
     private val _selectedTab = MutableStateFlow(TaskListTab.CURRENT_WEEK)
-    val selectedTab: StateFlow<TaskListTab> = _selectedTab.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val tasks: StateFlow<List<Task>> = combine(_currentWeek, _selectedTab) { week, tab ->
@@ -99,16 +96,9 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
         _selectedTab.value = tab
     }
 
-    fun toggleTab() {
-        _selectedTab.value = when (_selectedTab.value) {
-            TaskListTab.CURRENT_WEEK -> TaskListTab.ARCHIVE
-            TaskListTab.ARCHIVE -> TaskListTab.CURRENT_WEEK
-        }
-    }
-
     fun addTask(title: String, category: TaskCategory, isWeekly: Boolean, duration: Int) {
         //Empty title is not allowed, so we set a default title if the user doesn't provide one
-        val finalTitle = if (title.isBlank()) "Task name" else title
+        val finalTitle = title.ifBlank { "Task name" }
         //Empty duration is not allowed, so we set a default duration if the user doesn't provide one
         val finalDuration = if (duration <= 0) 1 else duration
 

@@ -25,7 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import FustatFamily
+import com.plin.ui.theme.FustatFamily
 import androidx.compose.ui.platform.LocalDensity
 
 @Composable
@@ -72,9 +72,8 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
                         ),
                     ) {
                         items(completedTasks, key = { "${it.id}-${it.instanceNumber}" }) { task ->
-                            TaskRow(
+                            TaskItem(
                                 task = task,
-                                showWeek = true,
                                 onClick = { viewModel.toggleTaskCompletion(task) },
                                 onLongClick = { /* Manage here if you want to open the detail view as well */ },
                                 onCompletedChange = { isDone ->

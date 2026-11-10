@@ -59,26 +59,25 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
         // A. Main content ('when')
         val targetIndex = currentBottomSection.toIndex()
             
-            AnimatedContent(
-                targetState = screen,
-                transitionSpec = {
-                    val direction = if (targetIndex > previousIndex) 1 else -1
-                    (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith
-                    (slideOutHorizontally(targetOffsetX = { it * -direction }) + fadeOut())
-                },
-                label = "screen_slide"
-            ) { targetScreen ->
-                when (targetScreen) {
-                    PlinScreen.TASK_LIST -> TaskListScreen()
-                    PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
-                    PlinScreen.REWARDS -> RewardsScreen(viewModel)
-                    PlinScreen.FRIENDS -> FriendsScreen()
-                    PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(
-                        onHome = { screen = PlinScreen.TASK_LIST },
-                        onBack = { screen = PlinScreen.TASK_LIST }
-                    )
-                }
+        AnimatedContent(
+            targetState = screen,
+            transitionSpec = {
+                val direction = if (targetIndex > previousIndex) 1 else -1
+                (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith (slideOutHorizontally(targetOffsetX = { it * -direction }) + fadeOut())
+            },
+            label = "screen_slide"
+        ) { targetScreen ->
+            when (targetScreen) {
+                PlinScreen.TASK_LIST -> TaskListScreen()
+                PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
+                PlinScreen.REWARDS -> RewardsScreen(viewModel)
+                PlinScreen.FRIENDS -> FriendsScreen()
+                PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(
+                    onHome = { screen = PlinScreen.TASK_LIST },
+                    onBack = { screen = PlinScreen.TASK_LIST }
+                )
             }
+        }
        
         // B. Animation over the 'when'
         androidx.compose.animation.AnimatedVisibility(
