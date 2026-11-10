@@ -19,7 +19,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 private enum class PlinScreen {
     TASK_LIST,
     FRIEND_OF_THE_WEEK_SETTINGS,
-    COMPLETED_SCREEN
+    COMPLETED_SCREEN,
+    FRIENDS
 }
 
 @Composable
@@ -48,6 +49,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
         when (screen) {
             PlinScreen.TASK_LIST -> TaskListScreen()
             PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
+            PlinScreen.FRIENDS -> FriendsScreen(todayCardHeight = viewModel.todayCardHeight)
             PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(onHome = { screen = PlinScreen.TASK_LIST },
                     // First you had: onBack = { screen = PlinScreen.SETTINGS },
                     // Now you go back to the list (or to the overlay, depending on what you prefer):
@@ -86,7 +88,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
                         viewModel.selectTab(TaskListTab.ARCHIVE)
                         screen = PlinScreen.COMPLETED_SCREEN
                     }
-                    BottomNavigationSection.Friends -> { /* Navigate to Friends screen */ }
+                    BottomNavigationSection.Friends -> { screen = PlinScreen.FRIENDS }
                     BottomNavigationSection.Rewards -> { /* Navigate to Rewards screen */ }
                 }
             }
