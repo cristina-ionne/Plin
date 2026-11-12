@@ -6,6 +6,7 @@ import com.plin.domain.models.Task
 import com.plin.domain.models.WeekLayout
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.delay 
 
 /**
  * Main entry point the UI uses for tasks.
@@ -125,6 +126,7 @@ class TaskService(private val taskDao: TaskDao) {
     }
 
     suspend fun setCompleted(task: Task, completed: Boolean) {
+
         val completedAt = if (completed) System.currentTimeMillis() else null
         taskDao.update(task.copy(completed = completed, completedAt = completedAt))
     }

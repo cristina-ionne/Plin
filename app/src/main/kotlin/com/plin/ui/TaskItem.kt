@@ -137,7 +137,7 @@ fun TaskItem(
                             .size(22.dp)
                             .animateEnterExit(
                                 enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
-                                exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                                //exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
                             )
                     )
                 } else {
@@ -149,7 +149,7 @@ fun TaskItem(
                             .clickable { onCompletedChange(!task.completed) }
                             .animateEnterExit(
                                 enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
-                                exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
+                                //exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
                             ),
                         contentAlignment = Alignment.Center
                     ) {

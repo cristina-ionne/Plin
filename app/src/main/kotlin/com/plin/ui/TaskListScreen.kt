@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import com.plin.ui.theme.PlinBlue
 import com.plin.ui.theme.PlinWhite
-import androidx.compose.animation.*
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -43,16 +42,21 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.lazy.rememberLazyListState
-
-
+import androidx.compose.animation.slideOutHorizontally
+import com.plin.domain.models.Task
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = viewModel(),
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    var selectedTaskKey by remember { mutableStateOf<String?>(null) }
-    val selectedTask = tasks.find { "${it.id}-${it.instanceNumber}" == selectedTaskKey }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
     var showAddOverlay by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
@@ -92,13 +96,46 @@ fun TaskListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    items(tasks, key = { "${it.id}-${it.instanceNumber}" }) { task ->
-                        TaskItem(
-                            task = task,
-                            onClick = { viewModel.toggleTaskCompletion(task) },
-                            onLongClick = { selectedTaskKey = "${task.id}-${task.instanceNumber}" },
-                            onCompletedChange = { isDone -> viewModel.setCompleted(task, isDone) }
-                        )
+                    items(tasks, key = {it.id}) { task ->
+                        // Local state to manage the animations
+                        // 0: Normal, 1: Animations, 3: Hidden (completed)
+                        var animationState by remember { mutableIntStateOf(0) }
+                        val scope = rememberCoroutineScope()
+
+                        AnimatedVisibility (
+                            visible = animationState < 2,
+                            exit = slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(durationMillis = 500 /* , delayMillis = 300*/)
+                            ) + fadeOut()
+                        ) {
+                            TaskItem(
+                                task = task.copy(completed = animationState == 1),
+                                onClick = {
+                                    if (!task.completed) {
+                                        animationState = 1
+                                        scope.launch {
+                                            delay(500.milliseconds)
+                                            animationState = 2 
+                                            delay(800.milliseconds)
+                                            viewModel.setCompleted(task, true)
+                                        }
+                                    }
+                                },
+                                onLongClick = { taskToEdit = task },
+                                onCompletedChange = { isDone ->
+                                    if (isDone) {
+                                        animationState = 1
+                                        scope.launch {
+                                            delay(500.milliseconds)
+                                            animationState = 2 // Sliding starts
+                                            delay(900.milliseconds) // Wait for the slide to finish
+                                            viewModel.setCompleted(task, true)
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -128,86 +165,75 @@ fun TaskListScreen(
             }
         }
 
-            //Animations for the overlay and background dimming when adding a task
-            //Black background dimming with fade in/out animation
-            AnimatedVisibility(
-                visible = showAddOverlay,
-                enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 300))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .clickable { showAddOverlay = false }
-                )
-            }
+           
 
-            //Add Task Overlay with scale and fade in/out animation
-            AnimatedVisibility(
-                visible = showAddOverlay,
-                enter = scaleIn(
-                    initialScale = 0.8f, 
-                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(), 
-                    contentAlignment = Alignment.Center
-                ) {
-                    AddTaskOverlay(
-                        onDismiss = { showAddOverlay = false },
-                        onSave = { title, category, isWeekly, duration ->
-                            viewModel.addTask(title, category, isWeekly, duration)
+        //Black background dimming with fade in/out animation
+        AnimatedVisibility(
+            visible = showAddOverlay || taskToEdit != null,
+            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 300))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable {
                             showAddOverlay = false
-                        }
-                    )
-                }
-            }
+                            taskToEdit = null
+                    }
+            )
         }
 
-
-    //Animations for the overlay and background dimming when editing a task
-    //Black background dimming with fade in/out animation
-    AnimatedVisibility(
-        visible = selectedTask != null,
-        enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-        exit = fadeOut(animationSpec = tween(durationMillis = 300))
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f))
-                .clickable { selectedTaskKey = null }
-        )
-    }
-
-    //Edit Task Overlay with scale and fade in/out animation
-    AnimatedVisibility(
-        visible = selectedTask != null,
-        enter = scaleIn(
-            initialScale = 0.8f, 
-            animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-        ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-        exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            selectedTask?.let { task ->
-                EditTaskOverlay(
-                    task = task,
-                    onDismiss = { selectedTaskKey = null },
-                    onSave = { updated -> 
-                        viewModel.updateTask(updated)
-                        selectedTaskKey = null
-                    },
-                    onDelete = {
-                        viewModel.deleteTask(task)
-                        selectedTaskKey = null
+        //Add task Overlay with scale and fade in/out animation
+        AnimatedVisibility(
+            visible = showAddOverlay,
+            enter = scaleIn(
+                initialScale = 0.8f,
+                animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+            ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+            exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                AddTaskOverlay(
+                    onDismiss = { showAddOverlay = false },
+                    onSave = { title, category, isWeekly, duration ->
+                        viewModel.addTask(title, category, isWeekly, duration)
+                        showAddOverlay = false
                     }
                 )
             }
         }
+
+
+        //Edit task Overlay with scale and fade in/out animation
+        AnimatedVisibility(
+            visible = taskToEdit != null,
+            enter = scaleIn(
+                initialScale = 0.8f, 
+                animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+            ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+            exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                taskToEdit?.let { task ->
+                    EditTaskOverlay(
+                        task = task,
+                        onDismiss = { taskToEdit = null },
+                        onSave = { updated -> 
+                            viewModel.updateTask(updated)
+                            taskToEdit = null
+                        },
+                        onDelete = {
+                            viewModel.deleteTask(task)
+                            taskToEdit = null
+                        }
+                    )
+                }
+            }
+        }       
+                    
     }
- 
 }
