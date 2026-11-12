@@ -32,9 +32,7 @@ class FriendListViewModel(private val friendDao: FriendDao) : ViewModel() {
 
     fun deleteFriend(friend: Friend) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (friend.id != 0L) {
-                friendDao.delete(friend)
-            }
+            friendDao.delete(friend)
         }
     }
 
