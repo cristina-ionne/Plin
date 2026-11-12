@@ -222,7 +222,7 @@ fun EditTaskOverlay(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tasto REMOVE TASK
+            // REMOVE TASK button
             Text(
                 text = "Remove task",
                 fontSize = 16.sp,

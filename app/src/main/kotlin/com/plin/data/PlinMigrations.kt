@@ -86,4 +86,20 @@ object PlinMigrations {
             )
         }
     }
+
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS friends (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    frequency INTEGER NOT NULL
+                )
+                """.trimIndent(),
+            )
+        }
+    }
+
+
 }

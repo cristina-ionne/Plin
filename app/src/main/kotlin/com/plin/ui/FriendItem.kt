@@ -10,24 +10,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.plin.R
 import com.plin.ui.theme.FustatFamily
 import com.plin.ui.theme.PlinColors
 import com.plin.ui.theme.TaskAppearance
 import com.plin.ui.theme.TaskAppearance.titleFontSize
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FriendItem(
     name: String,
+    onLongClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
             .background(PlinColors.PlinBlue.copy(alpha=0.3f))
+            .combinedClickable(
+                onClick = {},
+                onLongClick = { onLongClick() }
+            )
             .padding(16.dp)
     ) {
         Row(
