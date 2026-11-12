@@ -106,11 +106,11 @@ fun TaskListScreen(
                             visible = animationState < 2,
                             exit = slideOutHorizontally(
                                 targetOffsetX = { it },
-                                animationSpec = tween(durationMillis = 500 /* , delayMillis = 300*/)
+                                animationSpec = tween(durationMillis = 500)
                             ) + fadeOut()
                         ) {
                             TaskItem(
-                                task = task.copy(completed = animationState == 1),
+                                task = task.copy(completed = animationState >= 1),
                                 onClick = {
                                     if (!task.completed) {
                                         animationState = 1

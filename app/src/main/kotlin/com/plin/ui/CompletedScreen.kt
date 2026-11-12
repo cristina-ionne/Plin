@@ -22,6 +22,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.sp
 import com.plin.ui.theme.FustatFamily
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideOutHorizontally
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
@@ -66,21 +77,46 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
                             bottom = 100.dp
                         ),
                     ) {
-                        items(completedTasks, key = { "${it.id}-${it.instanceNumber}" }) { task ->
-                            TaskItem(
-                                task = task,
-                                onClick = { viewModel.toggleTaskCompletion(task) },
-                                onLongClick = { /* Manage here if you want to open the detail view as well */ },
-                                onCompletedChange = { isDone ->
-                                    viewModel.setCompleted(
-                                        task,
-                                        isDone
-                                    )
-                                },
-                            )
+                        items(completedTasks, key = { it.id }) { task ->
+                            var animationState by remember { mutableIntStateOf(0) }
+                            val scope = rememberCoroutineScope()
+
+                            AnimatedVisibility(
+                                visible = animationState < 2,
+                                exit = slideOutHorizontally(
+                                    targetOffsetX = { -it }, // negative to slide left
+                                    animationSpec = tween(durationMillis = 500)
+                                ) + fadeOut()
+                            ) {
+                                TaskItem(
+                                    task = task.copy(completed = animationState == 0),
+                                    onClick = {
+                                        if (animationState == 0) {
+                                            animationState = 1 // 1. Empty the task
+                                            scope.launch {
+                                                delay(300.milliseconds) // Pause to show it's empty
+                                                animationState = 2 // Start sliding left
+                                                delay(500.milliseconds) // Wait for the slide to end
+                                                viewModel.setCompleted(task, false) // Back in the DB
+                                            }
+                                        }
+                                    },
+                                    onLongClick = { /* Manage here if you want to open the detail view as well */ },
+                                    onCompletedChange = { isDone ->
+                                        if (!isDone && animationState == 0) {
+                                            animationState = 1
+                                            scope.launch {
+                                                delay(300.milliseconds)
+                                                animationState = 2
+                                                delay(500.milliseconds)
+                                                viewModel.setCompleted(task, false)
+                                            }
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
-
                 }
             }
         }

@@ -44,6 +44,10 @@ import androidx.compose.ui.geometry.Offset
 import com.plin.domain.enums.TaskCategory
 import com.plin.ui.theme.PlinOrange
 import kotlin.math.hypot
+import androidx.compose.foundation.interaction.MutableInteractionSource // Import necessario
+import androidx.compose.runtime.remember
+
+
 
 fun formatCategory(category: TaskCategory): String =
     category.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
@@ -76,10 +80,13 @@ fun TaskItem(
         label = "sub_text_color"
     )
     val categoryTextColor by animateColorAsState(
-    targetValue = if (task.completed) PlinWhite else task.category.color,
-    animationSpec = tween(durationMillis = 300),
-    label = "category_color"
-)
+        targetValue = if (task.completed) PlinWhite else task.category.color,
+        animationSpec = tween(durationMillis = 300),
+        label = "category_color"
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+
 
     // Main card container with the circular wave animation and the click/long-click handlers
     Box(
@@ -116,6 +123,8 @@ fun TaskItem(
                 }
             }
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null, //avoids the grey background when clicking the task
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
