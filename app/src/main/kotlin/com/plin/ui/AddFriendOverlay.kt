@@ -32,7 +32,8 @@ fun AddFriendOverlay(
 ) {
     var name by remember { mutableStateOf("") }
     var frequency by remember { mutableIntStateOf(0) }
-    var isError by remember { mutableStateOf(false) }
+    var isErrorName by remember { mutableStateOf(false) }
+    var isErrorFrequency by remember { mutableStateOf(false) }
 
     AnimatedVisibility(
         visible = true,
@@ -60,12 +61,12 @@ fun AddFriendOverlay(
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = if (isError) PlinColors.PlinRed.copy(alpha = 0.7f) else PlinColors.PlinDark.copy(alpha = 0.3f),
-                    focusedBorderColor = if (isError) PlinColors.PlinRed else PlinColors.PlinDark,
+                    unfocusedBorderColor = if (isErrorName) PlinColors.PlinRed.copy(alpha = 0.7f) else PlinColors.PlinDark.copy(alpha = 0.3f),
+                    focusedBorderColor = if (isErrorName) PlinColors.PlinRed else PlinColors.PlinDark,
                     cursorColor = PlinColors.PlinDark.copy(alpha = 0.3f)),
                 singleLine = true
             )
-            if (isError) {
+            if (isErrorName) {
                 Text(
                     text = "Friend name is mandatory",
                     color = PlinColors.PlinRed,
@@ -97,9 +98,19 @@ fun AddFriendOverlay(
                         modifier = Modifier
                             .size(32.dp)
                             .clickable { frequency = i },
-                        tint = PlinColors.PlinOrange
+                        tint = if (isErrorFrequency) PlinColors.PlinRed else PlinColors.PlinOrange
                     )
                 }
+            }
+
+        if (isErrorFrequency) {
+                Text(
+                    text = "Frequency is mandatory",
+                    color = PlinColors.PlinRed,
+                    fontSize = 12.sp,
+                    fontFamily = FustatFamily,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -109,10 +120,11 @@ fun AddFriendOverlay(
                 TextButton(onClick = onDismiss) { Text("Cancel", color = PlinColors.PlinBlue, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold) }
                 Button(
                     onClick = {
-                        if (name.isBlank()) {
-                            isError = true
-                        } else {
-                            isError = false
+                        
+                        isErrorName = name.isBlank()
+                        isErrorFrequency = (frequency == 0)
+
+                        if (!isErrorName && !isErrorFrequency) {
                             onSave(name, frequency)
                         }
                     },
