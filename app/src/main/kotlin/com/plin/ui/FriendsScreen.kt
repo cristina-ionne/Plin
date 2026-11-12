@@ -77,14 +77,19 @@ fun FriendsScreen() {
                 contentPadding = PaddingValues(bottom = 100.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(friendsList) { friend ->
-                    FriendItem(
-                        name = friend.name,
-                        onLongClick = {
-                            friendToEdit = friend
-                            showEditFriendOverlay = true
-                        }
-                    )
+                items(
+                    items = friendsList,
+                    key = { friend -> friend.id } //For the animation
+                ) { friend ->
+                    Box(modifier = Modifier.animateItem()) {
+                        FriendItem(
+                            name = friend.name,
+                            onLongClick = {
+                                friendToEdit = friend
+                                showEditFriendOverlay = true
+                            }
+                        )
+                    }
                 }
             }
         }
