@@ -10,9 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.plin.R
 import com.plin.ui.theme.FustatFamily
 import com.plin.ui.theme.PlinColors
@@ -20,7 +18,7 @@ import com.plin.ui.theme.TaskAppearance
 import com.plin.ui.theme.TaskAppearance.titleFontSize
 
 @Composable
-fun FriendItem(
+fun RewardItem(
     name: String,
 ) {
     Box(
