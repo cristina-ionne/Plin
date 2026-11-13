@@ -52,28 +52,28 @@ fun EditTaskOverlay(
             modifier = Modifier
                 .padding(horizontal = 40.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinWhite)
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable(enabled = false) {}
                 .padding(24.dp)
         ) {
-            Text(text = "Edit task", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = PlinColors.PlinDark)
+            Text(text = "Edit task", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(20.dp))
 
             // Campo Name
-            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f))
+            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f))
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
-                textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f)),
+                textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)),
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = PlinColors.PlinDark.copy(alpha = 0.3f), focusedBorderColor = PlinColors.PlinDark),
+                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), focusedBorderColor = MaterialTheme.colorScheme.onSurface),
                 singleLine = true
             )
             
             Spacer(modifier = Modifier.height(16.dp))
 
             // Category
-            Text(text = "Category", fontSize = 14.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
+            Text(text = "Category", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
             //Category menu
             ExposedDropdownMenuBox(
                 expanded = isCategoryDropdownExpanded,
@@ -100,10 +100,10 @@ fun EditTaskOverlay(
                 ExposedDropdownMenu(
                     expanded = isCategoryDropdownExpanded,
                     onDismissRequest = { isCategoryDropdownExpanded = false },
-                    containerColor = PlinColors.PlinWhite,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
-                    .border(1.dp, PlinColors.PlinDark.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
                     .heightIn(max = 205.dp)
 
                 ) {
@@ -124,7 +124,7 @@ fun EditTaskOverlay(
                                 isCategoryDropdownExpanded = false
                             },
                             colors = MenuDefaults.itemColors(
-                                textColor = PlinColors.PlinDark.copy(alpha = 0.75f)
+                                textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                             )
                         )
                         // Add divider between items except for the last one
@@ -139,7 +139,7 @@ fun EditTaskOverlay(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Duration Dropdown
-            Text(text = "Duration", fontSize = 14.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
+            Text(text = "Duration", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
             
             ExposedDropdownMenuBox(
                 expanded = isDropdownExpanded,
@@ -150,8 +150,8 @@ fun EditTaskOverlay(
                         .fillMaxWidth()
                         .height(50.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .border(1.dp, PlinColors.PlinDark.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                        .background(PlinColors.PlinWhite)
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surface)
                         .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart
@@ -173,9 +173,9 @@ fun EditTaskOverlay(
                         fontFamily = FustatFamily,
                         
                         color = if (isSelected) {
-                            PlinColors.PlinDark.copy(alpha = 0.75f)
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                         } else {
-                            PlinColors.PlinDark.copy(alpha = 0.5f)
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         }
                     )
 
@@ -184,9 +184,9 @@ fun EditTaskOverlay(
                 ExposedDropdownMenu(
                     expanded = isDropdownExpanded,
                     onDismissRequest = { isDropdownExpanded = false },
-                    containerColor = PlinColors.PlinWhite,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.border(1.dp, PlinColors.PlinDark.copy(alpha = 0.2f), RoundedCornerShape(12.dp)) .heightIn(max = 205.dp)
+                    modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), RoundedCornerShape(12.dp)) .heightIn(max = 205.dp)
                 ) {
                     val options = listOf("<1", "1", "2", "3", "4", "5+")
                     options.forEach { option ->
@@ -202,8 +202,8 @@ fun EditTaskOverlay(
                             },
 
                             colors = MenuDefaults.itemColors(
-                                textColor = PlinColors.PlinDark.copy(alpha = 0.75f),
-                                disabledTextColor = Color.Gray
+                                textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                                disabledTextColor = MaterialTheme.colorScheme.tertiary
                             ),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                                 
@@ -213,7 +213,7 @@ fun EditTaskOverlay(
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 thickness = 1.dp,
-                                color = PlinColors.PlinDark.copy(alpha = 0.1f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                             )
                         }
                     }
@@ -228,7 +228,7 @@ fun EditTaskOverlay(
                 fontSize = 16.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.ExtraBold,
-                color = PlinColors.PlinOrange,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier
                     .clickable { 
                         onDelete()
@@ -242,15 +242,15 @@ fun EditTaskOverlay(
             // Cancel / Save buttons
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onDismiss) { 
-                    Text("Cancel", color = PlinColors.PlinBlue, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold) 
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
                 }
                 Button(
                     onClick = { 
                         onSave(task.copy(title = name, category = category, duration = duration, isWeekly = isWeekly)) 
                     }, 
-                    colors = ButtonDefaults.buttonColors(containerColor = PlinColors.PlinOrange)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
-                    Text("Save", color = PlinColors.PlinWhite, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
+                    Text("Save", color = MaterialTheme.colorScheme.onSecondary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
                 }
             }
         }

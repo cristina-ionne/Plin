@@ -7,14 +7,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import com.plin.ui.theme.FustatFamily
-import com.plin.ui.theme.PlinColors
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -28,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.res.painterResource
 import com.plin.R
 
@@ -51,7 +50,7 @@ fun TodayCard(onSizeMeasured: (Int) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinBlue)
+                .background(MaterialTheme.colorScheme.primary)
                 .padding(24.dp)
         ) {
             Text(
@@ -59,7 +58,7 @@ fun TodayCard(onSizeMeasured: (Int) -> Unit) {
                 fontSize = 36.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.ExtraBold,
-                color = PlinColors.PlinWhite
+                color = MaterialTheme.colorScheme.onPrimary
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -70,14 +69,14 @@ fun TodayCard(onSizeMeasured: (Int) -> Unit) {
                     .fillMaxWidth()
                     .height(12.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFFF0FAFF))
+                    .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(dayValue / 7f)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFDD6900))
+                        .background(MaterialTheme.colorScheme.secondary)
                 )
             }
 
@@ -90,7 +89,7 @@ fun TodayCard(onSizeMeasured: (Int) -> Unit) {
                 fontSize = 16.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.Normal,
-                color = PlinColors.PlinWhite
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
@@ -109,7 +108,7 @@ fun WellDoneCard(fixedHeight: Int? = null) {
                 .fillMaxWidth()
                 .then(if (fixedHeight != null) Modifier.height(with(density) { fixedHeight.toDp() }) else Modifier)
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinBlue)
+                .background(MaterialTheme.colorScheme.primary)
                 .padding(24.dp)
         ) {
             Text(
@@ -117,7 +116,7 @@ fun WellDoneCard(fixedHeight: Int? = null) {
                 fontSize = 36.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.ExtraBold,
-                color = PlinColors.PlinWhite
+                color = MaterialTheme.colorScheme.onPrimary
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -128,7 +127,7 @@ fun WellDoneCard(fixedHeight: Int? = null) {
                 fontSize = 18.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.Normal,
-                color = PlinColors.PlinWhite,
+                color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(top = 24.dp)
             )
         }
@@ -144,7 +143,7 @@ fun RelationshipCard() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinOrange)
+                .background(MaterialTheme.colorScheme.secondary)
                 .padding(top = 20.dp, start= 24.dp, end = 24.dp, bottom = 16.dp)
         ) {
             Text(
@@ -153,7 +152,7 @@ fun RelationshipCard() {
                 lineHeight = 36.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.ExtraBold,
-                color = PlinColors.PlinWhite
+                color = MaterialTheme.colorScheme.onSecondary
             )
 
 
@@ -164,7 +163,7 @@ fun RelationshipCard() {
                 lineHeight = 18.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.Normal,
-                color = PlinColors.PlinWhite,
+                color = MaterialTheme.colorScheme.onSecondary,
                 modifier = Modifier.padding(top = 24.dp)
             )
         }
@@ -184,7 +183,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
             .fillMaxWidth()
             .then(if (fixedHeight != null) Modifier.height(with(density) { fixedHeight.toDp() }) else Modifier)
             .clip(RoundedCornerShape(24.dp))
-            .background(PlinColors.PlinBlue)
+            .background(MaterialTheme.colorScheme.primary)
             .padding(24.dp)
     ) {
         Text(
@@ -193,7 +192,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
             lineHeight = 36.sp,
             fontFamily = FustatFamily,
             fontWeight = FontWeight.ExtraBold,
-            color = PlinColors.PlinWhite
+            color = MaterialTheme.colorScheme.onPrimary
         )
 
 
@@ -204,7 +203,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
             lineHeight = 24.sp,
             fontFamily = FustatFamily,
             fontWeight = FontWeight.Normal,
-            color = PlinColors.PlinWhite
+            color = MaterialTheme.colorScheme.onPrimary
 
         )
 
@@ -214,7 +213,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
                 .wrapContentSize()
                 .padding(top = 8.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinWhite.copy(alpha = 0.6f))
+                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f))
 
         ) {
             Row(
@@ -225,7 +224,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
 
                 Text(
                     text = "$totalPoints",
-                    color = PlinColors.PlinOrange,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontSize = 24.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.ExtraBold,
@@ -234,7 +233,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
 
                 Text (
                     text = "points",
-                    color = PlinColors.PlinOrange,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontSize = 18.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.Bold,

@@ -20,14 +20,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.plin.domain.models.Task
-import com.plin.ui.theme.TaskAppearance
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.res.painterResource
 import com.plin.R
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.plin.ui.theme.PlinWhite
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.width
 import androidx.compose.animation.AnimatedContent
@@ -42,11 +40,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import com.plin.domain.enums.TaskCategory
-import com.plin.ui.theme.PlinOrange
 import kotlin.math.hypot
-import androidx.compose.foundation.interaction.MutableInteractionSource // Import necessario
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.remember
-
+import androidx.compose.ui.unit.sp
+import com.plin.ui.theme.PlinColors
 
 
 fun formatCategory(category: TaskCategory): String =
@@ -70,17 +69,17 @@ fun TaskItem(
 
     // 2. Text color animation to guarantee maximum readability
     val titleTextColor by animateColorAsState(
-        targetValue = if (task.completed) PlinWhite else TaskAppearance.textColorPrimary,
+        targetValue = if (task.completed) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface,
         animationSpec = tween(durationMillis = 300),
         label = "title_color"
     )
     val subTextColor by animateColorAsState(
-        targetValue = if (task.completed) PlinWhite.copy(alpha = 0.8f) else TaskAppearance.textColorSecondary,
+        targetValue = if (task.completed) MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
         animationSpec = tween(durationMillis = 300),
         label = "sub_text_color"
     )
     val categoryTextColor by animateColorAsState(
-        targetValue = if (task.completed) PlinWhite else task.category.color,
+        targetValue = if (task.completed) MaterialTheme.colorScheme.onSecondary else task.category.color,
         animationSpec = tween(durationMillis = 300),
         label = "category_color"
     )
@@ -92,9 +91,9 @@ fun TaskItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
-            .background(PlinWhite)
-            .border(0.dp, TaskAppearance.borderColor, RoundedCornerShape(TaskAppearance.cornerRadius))
+            .clip(RoundedCornerShape(30.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(0.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), RoundedCornerShape(30.dp))
             .drawWithContent {
                 // A) Draw the default content (background, border, texts, icons) first
                 drawContent()
@@ -113,7 +112,7 @@ fun TaskItem(
                     val currentRadius = maxRadius * fillProgress
 
                     drawCircle(
-                        color = PlinOrange,
+                        color = PlinColors.PlinOrange,
                         radius = currentRadius,
                         center = Offset(originX, originY)
                     )
@@ -124,7 +123,7 @@ fun TaskItem(
             }
             .combinedClickable(
                 interactionSource = interactionSource,
-                indication = null, //avoids the grey background when clicking the task
+                indication = null, //avoids the gray background when clicking the task
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
@@ -153,8 +152,8 @@ fun TaskItem(
                     Box(
                         modifier = Modifier
                             .size(22.dp)
-                            .background(PlinWhite, CircleShape)
-                            .border(1.dp, TaskAppearance.borderColor, CircleShape)
+                            .background(MaterialTheme.colorScheme.surface, CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), CircleShape)
                             .clickable { onCompletedChange(!task.completed) }
                             .animateEnterExit(
                                 enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
@@ -173,13 +172,13 @@ fun TaskItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = task.title,
-                    fontSize = TaskAppearance.titleFontSize,
+                    fontSize = 16.sp,
                     fontFamily = FustatFamily,
                     color = titleTextColor
                 )
                 Text(
                     text = formatCategory(task.category),
-                    fontSize = TaskAppearance.categoryFontSize,
+                    fontSize = 12.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.ExtraBold,
                     color = categoryTextColor,
@@ -189,7 +188,7 @@ fun TaskItem(
             // 5. Points
             Text(
                 text = "${task.points} pts",
-                fontSize = TaskAppearance.pointsFontSize,
+                fontSize = 12.sp,
                 fontFamily = FustatFamily,
                 color = subTextColor
             )

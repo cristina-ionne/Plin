@@ -48,21 +48,21 @@ fun EditFriendOverlay(
             modifier = Modifier
                 .padding(horizontal = 40.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(PlinColors.PlinWhite)
+                .background(MaterialTheme.colorScheme.surface)
                 .clickable(enabled = false) {}
                 .padding(24.dp)
         ) {
-            Text(text = "Edit friend", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = PlinColors.PlinDark)
+            Text(text = "Edit friend", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(20.dp))
 
             // Campo Name
-            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f))
+            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f))
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
-                textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f)),
+                textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)),
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = PlinColors.PlinDark.copy(alpha = 0.3f), focusedBorderColor = PlinColors.PlinDark),
+                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), focusedBorderColor = MaterialTheme.colorScheme.onSurface),
                 singleLine = true
             )
             
@@ -74,7 +74,7 @@ fun EditFriendOverlay(
                 text = "On a scale from 1 to 3, how often do you want to hear from your friend?",
                 fontSize = 14.sp,
                 fontFamily = FustatFamily,
-                color = PlinColors.PlinDark.copy(alpha = 0.75f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
                 lineHeight = 14.sp,
                 modifier = Modifier
                     .padding(bottom = 8.dp)
@@ -89,7 +89,7 @@ fun EditFriendOverlay(
                         modifier = Modifier
                             .size(32.dp)
                             .clickable { frequency = i },
-                        tint = PlinColors.PlinOrange
+                        tint = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
@@ -102,7 +102,7 @@ fun EditFriendOverlay(
                 fontSize = 16.sp,
                 fontFamily = FustatFamily,
                 fontWeight = FontWeight.ExtraBold,
-                color = PlinColors.PlinOrange,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier
                     .clickable { 
                         onDelete()
@@ -116,15 +116,15 @@ fun EditFriendOverlay(
             // Cancel / Save buttons
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onDismiss) { 
-                    Text("Cancel", color = PlinColors.PlinBlue, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold) 
+                    Text("Cancel", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
                 }
                 Button(
                     onClick = { 
                         onSave(friend.copy(name = name, frequency = frequency)) 
                     }, 
-                    colors = ButtonDefaults.buttonColors(containerColor = PlinColors.PlinOrange)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
-                    Text("Save", color = PlinColors.PlinWhite, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
+                    Text("Save", color = MaterialTheme.colorScheme.onSecondary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
                 }
             }
         }

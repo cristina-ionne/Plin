@@ -1,6 +1,6 @@
 package com.plin.ui
 
-import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,11 +13,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.plin.R
 import com.plin.ui.theme.FustatFamily
-import com.plin.ui.theme.PlinColors
-import com.plin.ui.theme.TaskAppearance
-import com.plin.ui.theme.TaskAppearance.titleFontSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -28,8 +28,8 @@ fun FriendItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
-            .background(PlinColors.PlinBlue.copy(alpha=0.3f))
+            .clip(RoundedCornerShape(30.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha=0.3f))
             .combinedClickable(
                 onClick = {},
                 onLongClick = { onLongClick() }
@@ -39,9 +39,10 @@ fun FriendItem(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_single_friend),
                 contentDescription = "Friend icon",
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .size(22.dp)
             )
@@ -51,8 +52,8 @@ fun FriendItem(
             Column {
                 Text(
                     text = name,
-                    color = PlinColors.PlinDark,
-                    fontSize = titleFontSize,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp,
                     fontFamily = FustatFamily
                 )
             }

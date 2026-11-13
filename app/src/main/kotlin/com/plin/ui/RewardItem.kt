@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,11 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.plin.R
 import com.plin.ui.theme.FustatFamily
-import com.plin.ui.theme.PlinColors
-import com.plin.ui.theme.TaskAppearance
-import com.plin.ui.theme.TaskAppearance.titleFontSize
 
 @Composable
 fun RewardItem(
@@ -24,8 +23,8 @@ fun RewardItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(TaskAppearance.cornerRadius))
-            .background(PlinColors.PlinOrange.copy(alpha=0.15f))
+            .clip(RoundedCornerShape(30.dp))
+            .background(MaterialTheme.colorScheme.secondary.copy(alpha=0.15f))
             .padding(16.dp)
     ) {
         Row(
@@ -43,8 +42,8 @@ fun RewardItem(
             Column {
                 Text(
                     text = name,
-                    color = PlinColors.PlinDark,
-                    fontSize = titleFontSize,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp,
                     fontFamily = FustatFamily,
                 )
             }

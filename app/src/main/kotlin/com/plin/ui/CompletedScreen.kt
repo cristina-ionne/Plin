@@ -28,6 +28,7 @@ import androidx.compose.animation.slideOutHorizontally
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,7 +60,7 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
                         text = "No completed tasks yet.",
                         fontFamily = FustatFamily,
                         fontSize = 16.sp,
-                        color = PlinColors.PlinDark,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 24.dp)

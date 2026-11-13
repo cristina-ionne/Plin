@@ -33,8 +33,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import com.plin.ui.theme.PlinBlue
-import com.plin.ui.theme.PlinWhite
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -144,11 +142,10 @@ fun TaskListScreen(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
         ) {
             Button(
                 onClick = { showAddOverlay = true },
-                colors = ButtonDefaults.buttonColors(containerColor = PlinBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -160,7 +157,7 @@ fun TaskListScreen(
                     fontSize = 16.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.ExtraBold,
-                    color = PlinWhite 
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
