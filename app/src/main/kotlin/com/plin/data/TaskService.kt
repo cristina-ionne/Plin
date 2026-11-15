@@ -32,10 +32,16 @@ class TaskService(private val taskDao: TaskDao) {
         isWeekly: Boolean = false,
         assignedWeek: String,
         duration: Int,
-        friendId: String = "",
+        friendIds: List<String> = emptyList(),
     ): Long {
         val finalTitle = if (title.isBlank()) "Task name" else title.trim()
         val finalDuration = if (duration <= 0) 1 else duration
+        val linkedFriendIds =
+            if (category == TaskCategory.SOCIAL_ACTIVITY) {
+                friendIds.filter { it.isNotBlank() }.distinct()
+            } else {
+                emptyList()
+            }
 
         require(assignedWeek.isNotEmpty()) { "assignedWeek is required" }
 
@@ -47,17 +53,18 @@ class TaskService(private val taskDao: TaskDao) {
                 instanceNumber = 0,
                 title = finalTitle,
                 category = category,
+                points = Task.pointsFromDuration(finalDuration),
                 isWeekly = isWeekly,
                 assignedWeek = assignedWeek,
-                friendId = friendId,
+                friendIds = linkedFriendIds,
             ),
         )
         return taskId
     }
 
     /**
-     * Creates or backfills the weekly Friend of the Week task for [week],
-     * assigning a random friend from [friends] when available.
+     * Creates or backfills a one-shot Friend of the Week Social Activity for [week]
+     * (not a rolling weekly series), assigning a random friend when available.
      */
     suspend fun ensureFriendOfTheWeekTask(week: WeekLayout, friends: List<Friend>) {
         val existing = taskDao.getFriendOfTheWeekForWeek(week.key)
@@ -66,15 +73,39 @@ class TaskService(private val taskDao: TaskDao) {
         if (existing == null) {
             val taskId = taskDao.getNextTaskId()
             taskDao.insert(
-                Task.createFriendOfWeek(taskId = taskId, weekKey = week.key, friend = picked),
+                Task.createWeeklySocialFriendTask(
+                    taskId = taskId,
+                    weekKey = week.key,
+                    friend = picked,
+                ),
             )
             return
         }
 
-        if (!existing.hasAssignedFriend() && picked != null) {
+        // Backfill friend + title when still on the empty auto pattern.
+        val canBackfill =
+            !existing.hasLinkedFriends() &&
+                picked != null &&
+                (existing.title == Task.FOTW_FALLBACK_TITLE || existing.title.startsWith(CONNECT_WITH_PREFIX))
+
+        if (canBackfill) {
             taskDao.update(
-                existing.copy(friendId = picked.id),
+                existing.copy(
+                    friendIds = listOf(picked.id),
+                    title = Task.connectWithTitle(picked.name),
+                ),
             )
+            return
+        }
+
+        // Migrated rows may already have a friend id but still use the fallback title.
+        if (existing.title == Task.FOTW_FALLBACK_TITLE && existing.hasLinkedFriends()) {
+            val linked = friends.firstOrNull { it.id == existing.friendIds.first() }
+            if (linked != null) {
+                taskDao.update(
+                    existing.copy(title = Task.connectWithTitle(linked.name)),
+                )
+            }
         }
     }
 
@@ -85,7 +116,7 @@ class TaskService(private val taskDao: TaskDao) {
         val missing = taskDao.getTasksMissingAssignedWeek()
         val zone = ZoneId.systemDefault()
         for (task in missing) {
-            if (task.isFriendOfTheWeek) {
+            if (isAutoFriendOfTheWeekTask(task)) {
                 continue
             }
             val date = Instant.ofEpochMilli(task.createdAt).atZone(zone).toLocalDate()
@@ -96,7 +127,7 @@ class TaskService(private val taskDao: TaskDao) {
 
     /**
      * On a new calendar week:
-     * - Weekly: create a new incomplete instance for [currentWeek]
+     * - Weekly: copy tasks tagged weekly from the immediate previous week into [currentWeek]
      * - Non-weekly incomplete: bump [Task.assignedWeek] to [currentWeek] so they keep showing
      */
     suspend fun applyNewWeek(currentWeek: WeekLayout) {
@@ -105,29 +136,27 @@ class TaskService(private val taskDao: TaskDao) {
     }
 
     private suspend fun rollWeeklyTasksIntoNewWeek(currentWeek: WeekLayout) {
-        val taskIds = taskDao.getWeeklyTaskIds()
-        for (taskId in taskIds) {
-            val alreadyInCurrentWeek = taskDao.getInstanceForWeek(taskId, currentWeek.key)
+        val previousWeek = WeekCalendar.forDate(currentWeek.startDate.minusDays(7))
+        val previousWeeklyTasks = taskDao.getWeeklyTasksForWeek(previousWeek.key)
+
+        for (previous in previousWeeklyTasks) {
+            val alreadyInCurrentWeek = taskDao.getInstanceForWeek(previous.id, currentWeek.key)
             if (alreadyInCurrentWeek != null) {
                 continue
             }
 
-            val latest = taskDao.getLatestForTask(taskId) ?: continue
-            if (latest.isFriendOfTheWeek) {
-                continue
-            }
             taskDao.insert(
                 Task(
-                    id = taskId,
-                    duration = latest.duration,
-                    instanceNumber = latest.instanceNumber + 1,
-                    title = latest.title,
-                    category = latest.category,
-                    points = latest.points,
+                    id = previous.id,
+                    duration = previous.duration,
+                    instanceNumber = previous.instanceNumber + 1,
+                    title = previous.title,
+                    category = previous.category,
+                    points = Task.pointsFromDuration(previous.duration),
                     isWeekly = true,
                     completed = false,
                     assignedWeek = currentWeek.key,
-                    friendId = latest.friendId,
+                    friendIds = previous.friendIds,
                 ),
             )
         }
@@ -145,10 +174,31 @@ class TaskService(private val taskDao: TaskDao) {
     suspend fun updateTask(task: Task) {
         val trimmed = task.title.trim()
         require(trimmed.isNotEmpty()) { "title is required" }
-        taskDao.update(task.copy(title = trimmed))
+        val linkedFriendIds =
+            if (task.category == TaskCategory.SOCIAL_ACTIVITY) {
+                task.friendIds.filter { it.isNotBlank() }.distinct()
+            } else {
+                emptyList()
+            }
+        taskDao.update(
+            task.copy(
+                title = trimmed,
+                friendIds = linkedFriendIds,
+                points = Task.pointsFromDuration(task.duration),
+            ),
+        )
     }
 
     suspend fun deleteTask(task: Task) {
         taskDao.delete(task)
+    }
+
+    private fun isAutoFriendOfTheWeekTask(task: Task): Boolean =
+        task.category == TaskCategory.SOCIAL_ACTIVITY &&
+            !task.isWeekly &&
+            (task.title == Task.FOTW_FALLBACK_TITLE || task.title.startsWith(CONNECT_WITH_PREFIX))
+
+    companion object {
+        private const val CONNECT_WITH_PREFIX = "Connect with "
     }
 }

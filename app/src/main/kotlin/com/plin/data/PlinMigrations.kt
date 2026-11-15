@@ -164,6 +164,72 @@ object PlinMigrations {
         }
     }
 
+    /**
+     * Replaces [Task.friendId] with [Task.friendIds] and remaps FRIEND_OF_THE_WEEK
+     * rows to SOCIAL_ACTIVITY. Also rewrites fallback titles to Connect with {name}
+     * when a single friend id is present (name resolved later by app; title left as-is
+     * if already Connect with …).
+     */
+    val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE tasks_new (
+                    id INTEGER NOT NULL,
+                    duration INTEGER NOT NULL,
+                    instanceNumber INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    completed INTEGER NOT NULL,
+                    category TEXT NOT NULL,
+                    points INTEGER NOT NULL,
+                    isWeekly INTEGER NOT NULL,
+                    assignedWeek TEXT NOT NULL,
+                    createdAt INTEGER NOT NULL,
+                    completedAt INTEGER,
+                    friendIds TEXT NOT NULL,
+                    PRIMARY KEY(id, instanceNumber)
+                )
+                """.trimIndent(),
+            )
+
+            val friendIdExpr = if (hasColumn(db, table = "tasks", column = "friendId")) {
+                "COALESCE(friendId, '')"
+            } else {
+                "''"
+            }
+            val durationExpr = if (hasColumn(db, table = "tasks", column = "duration")) {
+                "duration"
+            } else {
+                DEFAULT_DURATION.toString()
+            }
+
+            db.execSQL(
+                """
+                INSERT INTO tasks_new (
+                    id, duration, instanceNumber, title, completed, category,
+                    points, isWeekly, assignedWeek, createdAt, completedAt, friendIds
+                )
+                SELECT
+                    id,
+                    $durationExpr,
+                    instanceNumber,
+                    title,
+                    completed,
+                    CASE WHEN category = 'FRIEND_OF_THE_WEEK' THEN 'SOCIAL_ACTIVITY' ELSE category END,
+                    points,
+                    isWeekly,
+                    assignedWeek,
+                    createdAt,
+                    completedAt,
+                    $friendIdExpr
+                FROM tasks
+                """.trimIndent(),
+            )
+            db.execSQL("DROP TABLE tasks")
+            db.execSQL("ALTER TABLE tasks_new RENAME TO tasks")
+        }
+    }
+
     private const val DEFAULT_FREQUENCY = 3
     private const val DEFAULT_DURATION = 1
 

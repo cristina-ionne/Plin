@@ -58,7 +58,6 @@ fun TaskItem(
     onCompletedChange: (Boolean) -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    friendName: String = "",
 ) {
     
     // 1. Progressive filling animation (from 0f to 1f)
@@ -172,7 +171,7 @@ fun TaskItem(
             // 4. Text, title and category
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = task.displayTitle(friendName),
+                    text = task.title,
                     fontSize = 16.sp,
                     fontFamily = FustatFamily,
                     color = titleTextColor

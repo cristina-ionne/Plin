@@ -11,13 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.plin.domain.enums.TaskCategory
+import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
-import com.plin.ui.theme.PlinColors
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -26,14 +25,16 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskOverlay(
     task: Task,
+    friends: List<Friend>,
     onDismiss: () -> Unit,
     onSave: (Task) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
 
     var name by remember { mutableStateOf(task.title) }
@@ -42,7 +43,46 @@ fun EditTaskOverlay(
     var isWeekly by remember { mutableStateOf(task.isWeekly) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
     var isCategoryDropdownExpanded by remember { mutableStateOf(false) }
+    var selectedFriendIds by remember { mutableStateOf(task.friendIds.toSet()) }
+    var isFriendsPickerExpanded by remember { mutableStateOf(false) }
+    var consumeNextOutsideClick by remember { mutableStateOf(false) }
 
+    fun closeDropdowns() {
+        isDropdownExpanded = false
+        isCategoryDropdownExpanded = false
+        isFriendsPickerExpanded = false
+    }
+
+    fun onDropdownDismissedByOutside() {
+        closeDropdowns()
+        consumeNextOutsideClick = true
+    }
+
+    fun onOutsideClick() {
+        val hasOpenDropdown =
+            isDropdownExpanded || isCategoryDropdownExpanded || isFriendsPickerExpanded
+        when {
+            hasOpenDropdown -> {
+                closeDropdowns()
+                consumeNextOutsideClick = true
+            }
+            consumeNextOutsideClick -> {
+                consumeNextOutsideClick = false
+            }
+            else -> onDismiss()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onOutsideClick() },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
     AnimatedVisibility(
         visible = true,
         enter = scaleIn(initialScale = 0.9f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f)) + fadeIn(),
@@ -53,7 +93,11 @@ fun EditTaskOverlay(
                 .padding(horizontal = 40.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .clickable(enabled = false) {}
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { /* keep taps on the form from dismissing */ },
+                )
                 .padding(24.dp)
         ) {
             Text(text = "Edit task", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
@@ -74,12 +118,10 @@ fun EditTaskOverlay(
 
             // Category
             Text(text = "Category", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
-            //Category menu
             ExposedDropdownMenuBox(
                 expanded = isCategoryDropdownExpanded,
                 onExpandedChange = { isCategoryDropdownExpanded = !isCategoryDropdownExpanded }
             ) {
-                // Clickable
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,10 +138,9 @@ fun EditTaskOverlay(
                     )
                 }
 
-                // Menu
                 ExposedDropdownMenu(
                     expanded = isCategoryDropdownExpanded,
-                    onDismissRequest = { isCategoryDropdownExpanded = false },
+                    onDismissRequest = { onDropdownDismissedByOutside() },
                     containerColor = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -107,7 +148,6 @@ fun EditTaskOverlay(
                     .heightIn(max = 205.dp)
 
                 ) {
-                    // Menu items
                     TaskCategory.entries.forEach { cat ->
                         DropdownMenuItem(
                             text = { 
@@ -121,13 +161,16 @@ fun EditTaskOverlay(
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
                             onClick = {
                                 category = cat
+                                if (cat != TaskCategory.SOCIAL_ACTIVITY) {
+                                    selectedFriendIds = emptySet()
+                                    isFriendsPickerExpanded = false
+                                }
                                 isCategoryDropdownExpanded = false
                             },
                             colors = MenuDefaults.itemColors(
                                 textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                             )
                         )
-                        // Add divider between items except for the last one
                         if (cat != TaskCategory.entries.last()) {
                             HorizontalDivider(modifier = Modifier
                             .padding(horizontal = 18.dp))
@@ -137,6 +180,27 @@ fun EditTaskOverlay(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            if (category == TaskCategory.SOCIAL_ACTIVITY) {
+                LinkedFriendsPicker(
+                    friends = friends,
+                    selectedFriendIds = selectedFriendIds,
+                    expanded = isFriendsPickerExpanded,
+                    onExpandedChange = { open ->
+                        isFriendsPickerExpanded = open
+                        if (!open) {
+                            consumeNextOutsideClick = true
+                        }
+                    },
+                    onToggleFriend = { friendId ->
+                        selectedFriendIds = if (friendId in selectedFriendIds) {
+                            selectedFriendIds - friendId
+                        } else {
+                            selectedFriendIds + friendId
+                        }
+                    },
+                )
+            }
 
             // Duration Dropdown
             Text(text = "Duration", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
@@ -183,7 +247,7 @@ fun EditTaskOverlay(
 
                 ExposedDropdownMenu(
                     expanded = isDropdownExpanded,
-                    onDismissRequest = { isDropdownExpanded = false },
+                    onDismissRequest = { onDropdownDismissedByOutside() },
                     containerColor = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), RoundedCornerShape(12.dp)) .heightIn(max = 205.dp)
@@ -245,8 +309,22 @@ fun EditTaskOverlay(
                     Text("Cancel", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
                 }
                 Button(
-                    onClick = { 
-                        onSave(task.copy(title = name, category = category, duration = duration, isWeekly = isWeekly)) 
+                    onClick = {
+                        val friendIds =
+                            if (category == TaskCategory.SOCIAL_ACTIVITY) {
+                                selectedFriendIds.toList()
+                            } else {
+                                emptyList()
+                            }
+                        onSave(
+                            task.copy(
+                                title = name,
+                                category = category,
+                                duration = duration,
+                                isWeekly = isWeekly,
+                                friendIds = friendIds,
+                            ),
+                        )
                     }, 
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
@@ -254,5 +332,6 @@ fun EditTaskOverlay(
                 }
             }
         }
+    }
     }
 }

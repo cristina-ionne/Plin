@@ -15,8 +15,7 @@ enum class TaskCategory {
     ADULTING,
     SPORT,
     HEALTH,
-    SPECIAL,
-    FRIEND_OF_THE_WEEK;
+    SPECIAL;
 
     fun toDisplayString(): String {
         return this.name
@@ -36,8 +35,5 @@ enum class TaskCategory {
             SPORT -> PlinColors.PlinDarkBlue
             HEALTH -> PlinColors.PlinRed
             SPECIAL -> PlinColors.PlinFuchsia
-            FRIEND_OF_THE_WEEK -> PlinColors.PlinYellow
-
-            
         }
 }
