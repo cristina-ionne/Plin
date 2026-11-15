@@ -44,7 +44,6 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
     }
 
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    val friendNamesById by viewModel.friendNamesById.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -92,7 +91,6 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
                             ) {
                                 TaskItem(
                                     task = task.copy(completed = animationState == 0),
-                                    friendName = friendNamesById[task.friendId].orEmpty(),
                                     onClick = {
                                         if (animationState == 0) {
                                             animationState = 1 // 1. Empty the task

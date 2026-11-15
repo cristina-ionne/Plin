@@ -27,8 +27,13 @@ interface TaskDao {
     @Query("SELECT COALESCE(MAX(id), 0) + 1 FROM tasks")
     suspend fun getNextTaskId(): Long
 
-    @Query("SELECT DISTINCT id FROM tasks WHERE isWeekly = 1")
-    suspend fun getWeeklyTaskIds(): List<Long>
+    @Query(
+        """
+        SELECT * FROM tasks
+        WHERE assignedWeek = :weekKey AND isWeekly = 1
+        """,
+    )
+    suspend fun getWeeklyTasksForWeek(weekKey: String): List<Task>
 
     @Query(
         """
@@ -73,7 +78,12 @@ interface TaskDao {
     @Query(
         """
         SELECT * FROM tasks
-        WHERE category = 'FRIEND_OF_THE_WEEK' AND assignedWeek = :weekKey
+        WHERE assignedWeek = :weekKey
+          AND category = 'SOCIAL_ACTIVITY'
+          AND (
+            title = 'Friend of the Week'
+            OR title LIKE 'Connect with %'
+          )
         LIMIT 1
         """,
     )

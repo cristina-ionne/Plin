@@ -54,7 +54,7 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = viewModel(),
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    val friendNamesById by viewModel.friendNamesById.collectAsStateWithLifecycle()
+    val friends by viewModel.friends.collectAsStateWithLifecycle()
     val incompleteTasks = tasks.filter { !it.completed }
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
     var showAddOverlay by remember { mutableStateOf(false) }
@@ -111,7 +111,6 @@ fun TaskListScreen(
                         ) {
                             TaskItem(
                                 task = task.copy(completed = task.completed || animationState >= 1),
-                                friendName = friendNamesById[task.friendId].orEmpty(),
                                 onClick = {
                                     if (!task.completed) {
                                         animationState = 1
@@ -177,10 +176,6 @@ fun TaskListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable {
-                            showAddOverlay = false
-                            taskToEdit = null
-                    }
             )
         }
 
@@ -193,18 +188,14 @@ fun TaskListScreen(
             ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
             exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                AddTaskOverlay(
-                    onDismiss = { showAddOverlay = false },
-                    onSave = { title, category, isWeekly, duration ->
-                        viewModel.addTask(title, category, isWeekly, duration)
-                        showAddOverlay = false
-                    }
-                )
-            }
+            AddTaskOverlay(
+                friends = friends,
+                onDismiss = { showAddOverlay = false },
+                onSave = { title, category, isWeekly, duration, friendIds ->
+                    viewModel.addTask(title, category, isWeekly, duration, friendIds)
+                    showAddOverlay = false
+                },
+            )
         }
 
 
@@ -217,21 +208,20 @@ fun TaskListScreen(
             ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
             exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
         ) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                taskToEdit?.let { task ->
-                    EditTaskOverlay(
-                        task = task,
-                        onDismiss = { taskToEdit = null },
-                        onSave = { updated -> 
-                            viewModel.updateTask(updated)
-                            taskToEdit = null
-                        },
-                        onDelete = {
-                            viewModel.deleteTask(task)
-                            taskToEdit = null
-                        }
-                    )
-                }
+            taskToEdit?.let { task ->
+                EditTaskOverlay(
+                    task = task,
+                    friends = friends,
+                    onDismiss = { taskToEdit = null },
+                    onSave = { updated -> 
+                        viewModel.updateTask(updated)
+                        taskToEdit = null
+                    },
+                    onDelete = {
+                        viewModel.deleteTask(task)
+                        taskToEdit = null
+                    },
+                )
             }
         }       
                     

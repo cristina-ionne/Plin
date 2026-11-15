@@ -10,8 +10,7 @@ import com.plin.domain.enums.TaskCategory
  * and increments when a new weekly copy is generated.
  * [assignedWeek] is the ISO week key (e.g. 2026-W34) this instance belongs to.
  *
- * Regular tasks use [title] directly. Friend of the Week rows use [friendId] plus
- * [displayTitle] with a name from the friends pool.
+ * Social Activity tasks may link zero or more friends via [friendIds].
  */
 @Entity(tableName = "tasks", primaryKeys = ["id", "instanceNumber"])
 data class Task(
@@ -26,36 +25,48 @@ data class Task(
     val assignedWeek: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val completedAt: Long? = null,
-    val friendId: String = "",
+    val friendIds: List<String> = emptyList(),
 ) {
-    val isFriendOfTheWeek: Boolean
-        get() = category == TaskCategory.FRIEND_OF_THE_WEEK
-
-    val effectiveIsWeekly: Boolean
-        get() = isFriendOfTheWeek || isWeekly
-
-    fun hasAssignedFriend(): Boolean = friendId.isNotEmpty()
-
-    fun displayTitle(friendName: String = ""): String =
-        if (isFriendOfTheWeek) displayTitleForFriend(friendName) else title
+    fun hasLinkedFriends(): Boolean = friendIds.isNotEmpty()
 
     companion object {
         const val FOTW_FALLBACK_TITLE = "Friend of the Week"
         private const val TITLE_PREFIX = "Connect with "
         private const val FOTW_DEFAULT_DURATION = 1
+        /** UI stores "<1 hour" as duration code 6. */
+        private const val DURATION_LESS_THAN_ONE_HOUR = 6
 
-        fun displayTitleForFriend(friendName: String): String =
-            if (friendName.isBlank()) FOTW_FALLBACK_TITLE else "$TITLE_PREFIX$friendName"
+        fun connectWithTitle(friendName: String?): String {
+            val trimmed = friendName?.trim().orEmpty()
+            return if (trimmed.isEmpty()) FOTW_FALLBACK_TITLE else "$TITLE_PREFIX$trimmed"
+        }
 
-        fun createFriendOfWeek(taskId: Long, weekKey: String, friend: Friend?): Task = Task(
-            id = taskId,
-            duration = FOTW_DEFAULT_DURATION,
-            instanceNumber = 0,
-            title = FOTW_FALLBACK_TITLE,
-            category = TaskCategory.FRIEND_OF_THE_WEEK,
-            isWeekly = true,
-            assignedWeek = weekKey,
-            friendId = friend?.id.orEmpty(),
-        )
+        /**
+         * Maps task duration to points: &lt;1h → 1, 1h → 2, 2h → 3, …, 5+h → 6.
+         */
+        fun pointsFromDuration(duration: Int): Int =
+            when {
+                duration == DURATION_LESS_THAN_ONE_HOUR -> 1
+                duration <= 0 -> 2
+                else -> duration + 1
+            }
+
+        /**
+         * One-shot Friend of the Week for [weekKey] — not rolled by weekly regeneration.
+         */
+        fun createWeeklySocialFriendTask(taskId: Long, weekKey: String, friend: Friend?): Task {
+            val friendIds = if (friend != null) listOf(friend.id) else emptyList()
+            return Task(
+                id = taskId,
+                duration = FOTW_DEFAULT_DURATION,
+                instanceNumber = 0,
+                title = connectWithTitle(friend?.name),
+                category = TaskCategory.SOCIAL_ACTIVITY,
+                points = pointsFromDuration(FOTW_DEFAULT_DURATION),
+                isWeekly = false,
+                assignedWeek = weekKey,
+                friendIds = friendIds,
+            )
+        }
     }
 }

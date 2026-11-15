@@ -15,6 +15,7 @@ import com.plin.data.WeekStateStore
 import com.plin.data.routines.GenerateWeeklyTasksRoutine
 import com.plin.domain.WeekCalendar
 import com.plin.domain.enums.TaskCategory
+import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
 import com.plin.domain.models.WeekLayout
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,12 +55,11 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
 
     private val _selectedTab = MutableStateFlow(TaskListTab.CURRENT_WEEK)
 
-    val friendNamesById: StateFlow<Map<String, String>> = friendService.observeFriends()
-        .map { list -> list.associate { it.id to it.name } }
+    val friends: StateFlow<List<Friend>> = friendService.observeFriends()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyMap(),
+            initialValue = emptyList(),
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -111,7 +111,13 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
         _selectedTab.value = tab
     }
 
-    fun addTask(title: String, category: TaskCategory, isWeekly: Boolean, duration: Int) {
+    fun addTask(
+        title: String,
+        category: TaskCategory,
+        isWeekly: Boolean,
+        duration: Int,
+        friendIds: List<String> = emptyList(),
+    ) {
         val finalDuration = if (duration <= 0) 1 else duration
 
         viewModelScope.launch {
@@ -122,6 +128,7 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
                 isWeekly = isWeekly,
                 assignedWeek = weekKey,
                 duration = finalDuration,
+                friendIds = friendIds,
             )
         }
     }
