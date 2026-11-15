@@ -1,6 +1,6 @@
 package com.plin.ui
 
-import FustatFamily
+import com.plin.ui.theme.FustatFamily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -13,10 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsOverlay(
-    onDismiss: () -> Unit,
-    onNavigateToCategories: () -> Unit
-) {
+fun SettingsOverlay(onNavigateToCategories: () -> Unit)
+{
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +60,3 @@ fun SettingsSection(title: String, onClick: (() -> Unit)? = null) {
             )
       }
 }
-
-@Composable
-fun SettingsOverlay(onDismiss: () -> Unit) {
-   }

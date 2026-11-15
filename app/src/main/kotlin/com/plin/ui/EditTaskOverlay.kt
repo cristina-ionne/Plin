@@ -1,6 +1,6 @@
 package com.plin.ui
 
-import FustatFamily
+import com.plin.ui.theme.FustatFamily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border

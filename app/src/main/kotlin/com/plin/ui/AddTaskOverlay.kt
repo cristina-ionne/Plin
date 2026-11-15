@@ -1,6 +1,6 @@
 package com.plin.ui
 
-import FustatFamily
+import com.plin.ui.theme.FustatFamily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
@@ -39,7 +39,7 @@ fun AddTaskOverlay(
     var isWeekly by remember { mutableStateOf(false) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
     var isCategoryDropdownExpanded by remember { mutableStateOf(false) }
-
+    var isError by remember { mutableStateOf(false) }
 
     AnimatedVisibility(
         visible = true,
@@ -66,9 +66,22 @@ fun AddTaskOverlay(
                 textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = PlinColors.PlinDark.copy(alpha = 0.75f)),
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = PlinColors.PlinDark.copy(alpha = 0.3f), focusedBorderColor = PlinColors.PlinDark, cursorColor = PlinColors.PlinDark.copy(alpha = 0.3f)),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = if (isError) PlinColors.PlinRed.copy(alpha = 0.7f) else PlinColors.PlinDark.copy(alpha = 0.3f),
+                    focusedBorderColor = if (isError) PlinColors.PlinRed else PlinColors.PlinDark,
+                    cursorColor = PlinColors.PlinDark.copy(alpha = 0.3f)),
                 singleLine = true
             )
+            if (isError) {
+                Text(
+                    text = "Task name is mandatory",
+                    color = PlinColors.PlinRed,
+                    fontSize = 12.sp,
+                    fontFamily = FustatFamily,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Category
@@ -226,7 +239,17 @@ fun AddTaskOverlay(
             // Buttons
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onDismiss) { Text("Cancel", color = PlinColors.PlinBlue, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold) }
-                Button(onClick = { onSave(name, category, isWeekly, duration) }, colors = ButtonDefaults.buttonColors(containerColor = PlinColors.PlinOrange)) {
+                Button(
+                    onClick = {
+                        if (name.isBlank()) {
+                            isError = true
+                        } else {
+                            isError = false
+                            onSave(name, category, isWeekly, duration) 
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PlinColors.PlinOrange)
+                    ) {
                     Text("Save", color = PlinColors.PlinWhite, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
                 }
             }

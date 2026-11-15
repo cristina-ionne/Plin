@@ -1,6 +1,9 @@
 package com.plin.ui
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.plin.data.FriendOfTheWeekSettingsStore
@@ -17,18 +20,22 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 
 /**
  * Holds UI state for the task list and talks to [TaskService].
  * On start, resolves the current week and runs weekly routines if needed.
  */
 class TaskListViewModel(application: Application) : AndroidViewModel(application) {
+
+    //To give the same height to all the welcome cards
+    var todayCardHeight by mutableStateOf<Int?>(null)
+
     private val taskService = TaskService(
         PlinDatabase.getInstance(application).taskDao(),
     )
@@ -40,10 +47,8 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
     )
 
     private val _currentWeek = MutableStateFlow<WeekLayout?>(null)
-    val currentWeek: StateFlow<WeekLayout?> = _currentWeek.asStateFlow()
 
     private val _selectedTab = MutableStateFlow(TaskListTab.CURRENT_WEEK)
-    val selectedTab: StateFlow<TaskListTab> = _selectedTab.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val tasks: StateFlow<List<Task>> = combine(_currentWeek, _selectedTab) { week, tab ->
@@ -56,11 +61,21 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
                 else -> taskService.observeTasksForWeek(week)
             }
         }
+        
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList(),
         )
+        
+    //Calculate total points
+    val totalPoints: StateFlow<Int> = tasks.map { taskList ->
+        taskList.filter { it.completed }.sumOf { it.points }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0
+    )
 
     fun refreshMainView() {
         viewModelScope.launch {
@@ -81,22 +96,14 @@ class TaskListViewModel(application: Application) : AndroidViewModel(application
         _selectedTab.value = tab
     }
 
-    fun toggleTab() {
-        _selectedTab.value = when (_selectedTab.value) {
-            TaskListTab.CURRENT_WEEK -> TaskListTab.ARCHIVE
-            TaskListTab.ARCHIVE -> TaskListTab.CURRENT_WEEK
-        }
-    }
-
     fun addTask(title: String, category: TaskCategory, isWeekly: Boolean, duration: Int) {
-        //Empty title is not allowed, so we set a default title if the user doesn't provide one
-        val finalTitle = if (title.isBlank()) "Task name" else title
+        
         //Empty duration is not allowed, so we set a default duration if the user doesn't provide one
         val finalDuration = if (duration <= 0) 1 else duration
 
         viewModelScope.launch {
             val weekKey = _currentWeek.value?.key ?: WeekCalendar.forDate().key
-            taskService.addTask(title = finalTitle, category = category, isWeekly = isWeekly, assignedWeek = weekKey, duration = finalDuration)
+            taskService.addTask(title = title, category = category, isWeekly = isWeekly, assignedWeek = weekKey, duration = finalDuration)
         }
     }
 
