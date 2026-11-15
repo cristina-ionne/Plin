@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,32 +14,33 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.plin.R
-import com.plin.ui.theme.PlinWhite
 
 @Composable
 fun NavBar(
     modifier: Modifier = Modifier,
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    isDarkTheme: Boolean
 ) {
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(PlinWhite)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .height(97.dp)
             .padding(horizontal = 28.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Logo()
+        Logo(isDarkTheme)
         Profile(onClick = onProfileClick)
     }
 }
 
 @Composable
-fun Logo() {
+fun Logo(isDarkTheme: Boolean) {
     Image(
-        painter = painterResource(R.drawable.logo),
+        painter = if (isDarkTheme) painterResource(R.drawable.logo_negative) else painterResource(R.drawable.logo),
         contentDescription = "Logo",
         modifier = Modifier.height(40.dp),
         contentScale = ContentScale.Fit

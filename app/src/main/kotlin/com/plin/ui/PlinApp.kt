@@ -15,8 +15,12 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.*
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableIntStateOf
-import com.plin.ui.theme.PlinColors
+import com.plin.ui.theme.PlinTheme
+import androidx.compose.ui.platform.LocalContext
+import com.plin.data.ThemePreferences
 
 private enum class PlinScreen {
     TASK_LIST,
@@ -43,80 +47,99 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
 
     // Status to track previous index
     var previousIndex by remember { mutableIntStateOf(0) }
-      
-    Column(modifier = Modifier.fillMaxSize()) {
-    // 1. Upper Navbar
-    NavBar(onProfileClick = { showSettingsOverlay = !showSettingsOverlay })
 
-    // 2. Only Box that contains the rest
-    Box(
-        modifier = Modifier
-        .weight(1f)
-        .fillMaxSize()
-        .background(PlinColors.PlinWhite)
-        ) {
-        
-        // A. Main content ('when')
-        val targetIndex = currentBottomSection.toIndex()
+    val context = LocalContext.current
+
+    val systemInDark = isSystemInDarkTheme()
+    val themePrefs = remember { ThemePreferences(context) }
+    
+    var isDarkTheme by remember { 
+        mutableStateOf(
+            if (themePrefs.hasPreference()) themePrefs.isDarkMode() 
+            else systemInDark
+        ) 
+    }
+
+    PlinTheme(useDarkTheme = isDarkTheme) {
+        Column(modifier = Modifier.fillMaxSize()) {
+        // 1. Upper Navbar
+        NavBar(
+            isDarkTheme = isDarkTheme,
+            onProfileClick = { showSettingsOverlay = !showSettingsOverlay })
+
+        // 2. Only Box that contains the rest
+        Box(
+            modifier = Modifier
+            .weight(1f)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            ) {
             
-        AnimatedContent(
-            targetState = screen,
-            transitionSpec = {
-                val direction = if (targetIndex > previousIndex) 1 else -1
-                (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith (slideOutHorizontally(targetOffsetX = { it * -direction }) + fadeOut())
-            },
-            label = "screen_slide"
-        ) { targetScreen ->
-            when (targetScreen) {
-                PlinScreen.TASK_LIST -> TaskListScreen()
-                PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
-                PlinScreen.REWARDS -> RewardsScreen(viewModel)
-                PlinScreen.FRIENDS -> FriendsScreen()
-                PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(
-                    onHome = { screen = PlinScreen.TASK_LIST },
-                    onBack = { screen = PlinScreen.TASK_LIST }
+            // A. Main content ('when')
+            val targetIndex = currentBottomSection.toIndex()
+                
+            AnimatedContent(
+                targetState = screen,
+                transitionSpec = {
+                    val direction = if (targetIndex > previousIndex) 1 else -1
+                    (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith (slideOutHorizontally(targetOffsetX = { it * -direction }) + fadeOut())
+                },
+                label = "screen_slide"
+            ) { targetScreen ->
+                when (targetScreen) {
+                    PlinScreen.TASK_LIST -> TaskListScreen()
+                    PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
+                    PlinScreen.REWARDS -> RewardsScreen(viewModel)
+                    PlinScreen.FRIENDS -> FriendsScreen()
+                    PlinScreen.FRIEND_OF_THE_WEEK_SETTINGS -> FriendOfTheWeekSettingsScreen(
+                        onHome = { screen = PlinScreen.TASK_LIST },
+                        onBack = { screen = PlinScreen.TASK_LIST }
+                    )
+                }
+            }
+
+            // B. Animation over the 'when'
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showSettingsOverlay,
+                enter = slideInHorizontally(initialOffsetX = { it }),
+                exit = slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(durationMillis = 400) // Slightly increase the duration for a smoother animation
+            )
+            ) {
+                SettingsOverlay( isDarkTheme = isDarkTheme,
+                    onToggleTheme = {
+                        isDarkTheme = it
+                        themePrefs.setDarkMode(it)
+                    },
+                    onNavigateToCategories = { showSettingsOverlay = false }
                 )
             }
         }
 
-        // B. Animation over the 'when'
-        androidx.compose.animation.AnimatedVisibility(
-            visible = showSettingsOverlay,
-            enter = slideInHorizontally(initialOffsetX = { it }),
-            exit = slideOutHorizontally(
-            targetOffsetX = { it },
-            animationSpec = tween(durationMillis = 400) // Slightly increase the duration for a smoother animation
-        )
-        ) {
-            SettingsOverlay(
-                onNavigateToCategories = { showSettingsOverlay = false }
+            // Calling BottomNavigation and passing the current selected section
+            BottomNavigation(
+                currentSection = currentBottomSection,
+                onSectionSelected = { section ->
+                    // Update index before changing screen
+                    previousIndex = currentBottomSection.toIndex()
+                    showSettingsOverlay = false
+                    currentBottomSection = section
+                    // Manage the action on section change:
+                    when (section) {
+                        BottomNavigationSection.Home -> {
+                            viewModel.selectTab(TaskListTab.CURRENT_WEEK)
+                            screen = PlinScreen.TASK_LIST
+                        }
+                        BottomNavigationSection.Completed -> { 
+                            viewModel.selectTab(TaskListTab.ARCHIVE)
+                            screen = PlinScreen.COMPLETED_SCREEN
+                        }
+                        BottomNavigationSection.Friends -> { screen = PlinScreen.FRIENDS }
+                        BottomNavigationSection.Rewards -> { screen = PlinScreen.REWARDS }
+                    }
+                }
             )
         }
     }
-
-         // Calling BottomNavigation and passing the current selected section
-        BottomNavigation(
-            currentSection = currentBottomSection,
-            onSectionSelected = { section ->
-                // Update index before changing screen
-                previousIndex = currentBottomSection.toIndex()
-                showSettingsOverlay = false
-                currentBottomSection = section
-                // Manage the action on section change:
-                when (section) {
-                    BottomNavigationSection.Home -> {
-                        viewModel.selectTab(TaskListTab.CURRENT_WEEK)
-                        screen = PlinScreen.TASK_LIST
-                    }
-                    BottomNavigationSection.Completed -> { 
-                        viewModel.selectTab(TaskListTab.ARCHIVE)
-                        screen = PlinScreen.COMPLETED_SCREEN
-                    }
-                    BottomNavigationSection.Friends -> { screen = PlinScreen.FRIENDS }
-                    BottomNavigationSection.Rewards -> { screen = PlinScreen.REWARDS }
-                }
-            }
-        )
-    }
-        
 }

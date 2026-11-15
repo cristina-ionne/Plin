@@ -3,28 +3,41 @@ package com.plin.ui.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.darkColorScheme
 
-private val Teal = Color(0xFF0F766E)
-private val Background = Color(0xFFF2EFE8)
-private val OnBackground = Color(0xFF1C1917)
 
-private val LightColors = lightColorScheme(
-    primary = Teal,
-    onPrimary = Color.White,
-    background = Background,
-    onBackground = OnBackground,
-    surface = Color.White,
-    onSurface = OnBackground,
+private val DarkColors = darkColorScheme(
+    primary = PlinColors.PlinBlueDark,
+    onPrimary = PlinColors.PlinWhite,
+    secondary = PlinColors.PlinOrange,
+    onSecondary = PlinColors.PlinWhite,
+    tertiary = PlinColors.PlinGrey,
+    onTertiary = PlinColors.PlinRed,
+    background = PlinColors.PlinDark,
+    onBackground = PlinColors.PlinWhite,
+    surface = PlinColors.PlinDark,
+    onSurface = PlinColors.PlinWhite,
 )
 
-/**
- * Minimal Material 3 theme for Plin's first screens.
- */
+
+private val LightColors = lightColorScheme(
+    primary = PlinColors.PlinBlue,
+    onPrimary = PlinColors.PlinWhite,
+    secondary = PlinColors.PlinOrange,
+    onSecondary = PlinColors.PlinWhite,
+    tertiary = PlinColors.PlinGrey,
+    onTertiary = PlinColors.PlinRed,
+    background = PlinColors.PlinWhite,
+    onBackground = PlinColors.PlinDark,
+    surface = PlinColors.PlinWhite,
+    onSurface = PlinColors.PlinDark,
+)
+
 @Composable
-fun PlinTheme(content: @Composable () -> Unit) {
+fun PlinTheme(useDarkTheme: Boolean = false, content: @Composable () -> Unit) {
+    val colors = if (useDarkTheme) DarkColors else LightColors
     MaterialTheme(
-        colorScheme = LightColors,
-        content = content,
+        colorScheme = colors,
+        content = content
     )
 }
