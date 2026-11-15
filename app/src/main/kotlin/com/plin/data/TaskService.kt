@@ -2,11 +2,11 @@ package com.plin.data
 
 import com.plin.domain.WeekCalendar
 import com.plin.domain.enums.TaskCategory
+import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
 import com.plin.domain.models.WeekLayout
 import java.time.Instant
 import java.time.ZoneId
-import kotlinx.coroutines.delay 
 
 /**
  * Main entry point the UI uses for tasks.
@@ -15,10 +15,6 @@ import kotlinx.coroutines.delay
  * instead of talking to Room / SQLite directly.
  */
 class TaskService(private val taskDao: TaskDao) {
-
-    companion object {
-        const val FRIEND_OF_THE_WEEK_DEFAULT_TITLE = "Friend of the Week"
-    }
 
     /**
      * Visible list: tasks whose [Task.assignedWeek] is the current week.
@@ -35,13 +31,12 @@ class TaskService(private val taskDao: TaskDao) {
         category: TaskCategory,
         isWeekly: Boolean = false,
         assignedWeek: String,
-        duration: Int
+        duration: Int,
+        friendId: String = "",
     ): Long {
-        //If the title is empty, use "Task name", otherwise use the title
         val finalTitle = if (title.isBlank()) "Task name" else title.trim()
-        // If duration is 0 or negative, set it to 1
         val finalDuration = if (duration <= 0) 1 else duration
-        
+
         require(assignedWeek.isNotEmpty()) { "assignedWeek is required" }
 
         val taskId = taskDao.getNextTaskId()
@@ -54,26 +49,33 @@ class TaskService(private val taskDao: TaskDao) {
                 category = category,
                 isWeekly = isWeekly,
                 assignedWeek = assignedWeek,
+                friendId = friendId,
             ),
         )
         return taskId
     }
 
     /**
-     * Creates the weekly Friend of the Week task when enabled and none exists for [week].
+     * Creates or backfills the weekly Friend of the Week task for [week],
+     * assigning a random friend from [friends] when available.
      */
-    suspend fun ensureFriendOfTheWeekTask(week: WeekLayout) {
+    suspend fun ensureFriendOfTheWeekTask(week: WeekLayout, friends: List<Friend>) {
         val existing = taskDao.getFriendOfTheWeekForWeek(week.key)
-        if (existing != null) {
+        val picked = friends.randomOrNull()
+
+        if (existing == null) {
+            val taskId = taskDao.getNextTaskId()
+            taskDao.insert(
+                Task.createFriendOfWeek(taskId = taskId, weekKey = week.key, friend = picked),
+            )
             return
         }
-        addTask(
-            title = FRIEND_OF_THE_WEEK_DEFAULT_TITLE,
-            category = TaskCategory.FRIEND_OF_THE_WEEK,
-            isWeekly = true,
-            assignedWeek = week.key,
-            duration = 1
-        )
+
+        if (!existing.hasAssignedFriend() && picked != null) {
+            taskDao.update(
+                existing.copy(friendId = picked.id),
+            )
+        }
     }
 
     /**
@@ -83,6 +85,9 @@ class TaskService(private val taskDao: TaskDao) {
         val missing = taskDao.getTasksMissingAssignedWeek()
         val zone = ZoneId.systemDefault()
         for (task in missing) {
+            if (task.isFriendOfTheWeek) {
+                continue
+            }
             val date = Instant.ofEpochMilli(task.createdAt).atZone(zone).toLocalDate()
             val weekKey = WeekCalendar.forDate(date).key
             taskDao.update(task.copy(assignedWeek = weekKey))
@@ -108,6 +113,9 @@ class TaskService(private val taskDao: TaskDao) {
             }
 
             val latest = taskDao.getLatestForTask(taskId) ?: continue
+            if (latest.isFriendOfTheWeek) {
+                continue
+            }
             taskDao.insert(
                 Task(
                     id = taskId,
@@ -119,14 +127,13 @@ class TaskService(private val taskDao: TaskDao) {
                     isWeekly = true,
                     completed = false,
                     assignedWeek = currentWeek.key,
-
+                    friendId = latest.friendId,
                 ),
             )
         }
     }
 
     suspend fun setCompleted(task: Task, completed: Boolean) {
-
         val completedAt = if (completed) System.currentTimeMillis() else null
         taskDao.update(task.copy(completed = completed, completedAt = completedAt))
     }

@@ -12,10 +12,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsOverlay(isDarkTheme: Boolean,
+fun SettingsOverlay(
+    isDarkTheme: Boolean,
     onToggleTheme: (Boolean) -> Unit,
-    onNavigateToCategories: () -> Unit,)
-{
+    isFriendOfTheWeekEnabled: Boolean,
+    onToggleFriendOfTheWeek: (Boolean) -> Unit,
+    onNavigateToCategories: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,30 +48,19 @@ fun SettingsOverlay(isDarkTheme: Boolean,
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Dark Mode",
-                fontFamily = FustatFamily,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
-            )
-            Switch(
-                checked = isDarkTheme,
-                onCheckedChange = { onToggleTheme(it) },
-                colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
-                checkedTrackColor = MaterialTheme.colorScheme.secondary,
-                uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            )
-            )
-        }
+        SettingsSwitchRow(
+            label = "Friend of the Week",
+            checked = isFriendOfTheWeekEnabled,
+            onCheckedChange = onToggleFriendOfTheWeek,
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        SettingsSwitchRow(
+            label = "Dark Mode",
+            checked = isDarkTheme,
+            onCheckedChange = onToggleTheme,
+        )
     }
 }
 
@@ -87,4 +79,36 @@ fun SettingsSection(title: String, onClick: (() -> Unit)? = null) {
                 fontWeight = FontWeight.SemiBold
             )
       }
+}
+
+@Composable
+private fun SettingsSwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontFamily = FustatFamily,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.SemiBold
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
+                checkedTrackColor = MaterialTheme.colorScheme.secondary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            )
+        )
+    }
 }
