@@ -33,33 +33,31 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
-import com.plin.data.PlinDatabase
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.plin.domain.models.Friend
+import android.app.Application
 
 
 @Composable
 fun FriendsScreen() {
 
     val context = LocalContext.current
-    val friendDao = remember { PlinDatabase.getInstance(context).friendDao() }
-    
+    val application = context.applicationContext as Application
+
     val viewModel: FriendListViewModel = viewModel(
-        factory = FriendListViewModel.FriendViewModelFactory(friendDao)
+        factory = FriendListViewModel.FriendViewModelFactory(application)
     )
 
-    // Observe friends list in real time
-    val friendsList by friendDao.getAllFriends().collectAsState(initial = emptyList())
-    
+    val friendsList by viewModel.friends.collectAsStateWithLifecycle()
+
     var showAddFriendOverlay by remember { mutableStateOf(false) }
     var friendToEdit by remember { mutableStateOf<Friend?>(null) }
-    var showEditFriendOverlay by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -85,7 +83,6 @@ fun FriendsScreen() {
                             name = friend.name,
                             onLongClick = {
                                 friendToEdit = friend
-                                showEditFriendOverlay = true
                             }
                         )
                     }

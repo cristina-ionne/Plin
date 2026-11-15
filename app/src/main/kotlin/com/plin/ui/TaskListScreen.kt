@@ -54,6 +54,8 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = viewModel(),
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val friendNamesById by viewModel.friendNamesById.collectAsStateWithLifecycle()
+    val incompleteTasks = tasks.filter { !it.completed }
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
     var showAddOverlay by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -62,11 +64,11 @@ fun TaskListScreen(
         viewModel.refreshMainView()
     }
 
-    LaunchedEffect(tasks.size) {
-    if (tasks.isNotEmpty()) {
-        listState.animateScrollToItem(0)
+    LaunchedEffect(incompleteTasks.size) {
+        if (incompleteTasks.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
     }
-}
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -82,7 +84,7 @@ fun TaskListScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Tasks list goes here
-            if (tasks.isEmpty()) {
+            if (incompleteTasks.isEmpty()) {
                 Text(
                     text = "No tasks yet.",
                     style = MaterialTheme.typography.bodyLarge,
@@ -94,9 +96,9 @@ fun TaskListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    items(tasks, key = {it.id}) { task ->
+                    items(incompleteTasks, key = { it.id }) { task ->
                         // Local state to manage the animations
-                        // 0: Normal, 1: Animations, 3: Hidden (completed)
+                        // 0: Normal, 1: Filling, 2: Sliding out
                         var animationState by remember { mutableIntStateOf(0) }
                         val scope = rememberCoroutineScope()
 
@@ -108,7 +110,8 @@ fun TaskListScreen(
                             ) + fadeOut()
                         ) {
                             TaskItem(
-                                task = task.copy(completed = animationState >= 1),
+                                task = task.copy(completed = task.completed || animationState >= 1),
+                                friendName = friendNamesById[task.friendId].orEmpty(),
                                 onClick = {
                                     if (!task.completed) {
                                         animationState = 1

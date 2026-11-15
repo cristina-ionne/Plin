@@ -101,5 +101,84 @@ object PlinMigrations {
         }
     }
 
+    /**
+     * Unifies develop and add-friend v10 schemas into v11:
+     * - tasks.friendId (if missing)
+     * - tasks.duration (if missing; present on develop UI, absent on add-friend)
+     * - friends → UUID id + name + frequency
+     *
+     * Source v10 may be either:
+     * - develop: friends(id INTEGER, name, frequency), duration present, no friendId
+     * - add-friend: friends(id TEXT, friendName), friendId present, no duration
+     */
+    val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            if (!hasColumn(db, table = "tasks", column = "friendId")) {
+                db.execSQL(
+                    "ALTER TABLE tasks ADD COLUMN friendId TEXT NOT NULL DEFAULT ''",
+                )
+            }
+            if (!hasColumn(db, table = "tasks", column = "duration")) {
+                db.execSQL(
+                    "ALTER TABLE tasks ADD COLUMN duration INTEGER NOT NULL DEFAULT $DEFAULT_DURATION",
+                )
+            }
 
+            db.execSQL("DROP TABLE IF EXISTS friends_new")
+            db.execSQL(
+                """
+                CREATE TABLE friends_new (
+                    id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    frequency INTEGER NOT NULL,
+                    PRIMARY KEY(id)
+                )
+                """.trimIndent(),
+            )
+
+            when {
+                hasColumn(db, table = "friends", column = "friendName") -> {
+                    // add-friend pool: keep existing UUID ids, default frequency
+                    db.execSQL(
+                        """
+                        INSERT INTO friends_new (id, name, frequency)
+                        SELECT id, friendName, $DEFAULT_FREQUENCY
+                        FROM friends
+                        """.trimIndent(),
+                    )
+                }
+                hasColumn(db, table = "friends", column = "name") -> {
+                    // develop pool: regenerate UUID ids, keep name/frequency
+                    db.execSQL(
+                        """
+                        INSERT INTO friends_new (id, name, frequency)
+                        SELECT lower(hex(randomblob(16))), name, frequency
+                        FROM friends
+                        """.trimIndent(),
+                    )
+                }
+            }
+
+            db.execSQL("DROP TABLE IF EXISTS friends")
+            db.execSQL("ALTER TABLE friends_new RENAME TO friends")
+        }
+    }
+
+    private const val DEFAULT_FREQUENCY = 3
+    private const val DEFAULT_DURATION = 1
+
+    private fun hasColumn(db: SupportSQLiteDatabase, table: String, column: String): Boolean {
+        db.query("PRAGMA table_info(`$table`)").use { cursor ->
+            val nameIndex = cursor.getColumnIndex("name")
+            if (nameIndex < 0) {
+                return false
+            }
+            while (cursor.moveToNext()) {
+                if (cursor.getString(nameIndex) == column) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 }
