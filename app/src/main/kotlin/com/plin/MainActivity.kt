@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.plin.ui.TaskListScreen
+import com.plin.ui.PlinApp
 import com.plin.ui.theme.PlinTheme
 
 /**
@@ -17,6 +17,7 @@ import com.plin.ui.theme.PlinTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        android.util.Log.d("PLIN", "MainActivity started")
         enableEdgeToEdge()
         setContent {
             PlinTheme {
@@ -24,7 +25,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    TaskListScreen()
+                    PlinApp()
                 }
             }
         }

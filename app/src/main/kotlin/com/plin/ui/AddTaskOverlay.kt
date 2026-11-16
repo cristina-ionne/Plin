@@ -1,0 +1,357 @@
+package com.plin.ui
+
+import com.plin.ui.theme.FustatFamily
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.plin.domain.enums.TaskCategory
+import com.plin.domain.models.Friend
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.heightIn
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddTaskOverlay(
+    friends: List<Friend>,
+    onDismiss: () -> Unit,
+    onSave: (String, TaskCategory, Boolean, Int, List<String>) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf(TaskCategory.GENERIC) }
+    var duration by remember { mutableIntStateOf(0) }
+    var isWeekly by remember { mutableStateOf(false) }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var isCategoryDropdownExpanded by remember { mutableStateOf(false) }
+    var isError by remember { mutableStateOf(false) }
+    var selectedFriendIds by remember { mutableStateOf(setOf<String>()) }
+    var isFriendsPickerExpanded by remember { mutableStateOf(false) }
+    // When a dropdown closes from an outside tap, swallow that same tap so the form stays open.
+    var consumeNextOutsideClick by remember { mutableStateOf(false) }
+
+    fun closeDropdowns() {
+        isDropdownExpanded = false
+        isCategoryDropdownExpanded = false
+        isFriendsPickerExpanded = false
+    }
+
+    fun onDropdownDismissedByOutside() {
+        closeDropdowns()
+        consumeNextOutsideClick = true
+    }
+
+    fun onOutsideClick() {
+        val hasOpenDropdown =
+            isDropdownExpanded || isCategoryDropdownExpanded || isFriendsPickerExpanded
+        when {
+            hasOpenDropdown -> {
+                closeDropdowns()
+                consumeNextOutsideClick = true
+            }
+            consumeNextOutsideClick -> {
+                consumeNextOutsideClick = false
+            }
+            else -> onDismiss()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onOutsideClick() },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+    AnimatedVisibility(
+        visible = true,
+        enter = scaleIn(initialScale = 0.9f, animationSpec = spring(dampingRatio = 0.8f,
+            stiffness = 300f)) + fadeIn(),
+        exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut(animationSpec = tween(durationMillis = 200))
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 40.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.background)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { /* keep taps on the form from dismissing */ },
+                )
+                .padding(24.dp)
+        ) {
+            Text(text = "New task", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Name
+            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
+            OutlinedTextField(
+                value = name, onValueChange = { name = it },
+                placeholder = { Text("Enter task name", fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)) },
+                textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    focusedBorderColor = if (isError) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurface,
+                    cursorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
+                singleLine = true
+            )
+            if (isError) {
+                Text(
+                    text = "Task name is mandatory",
+                    color = MaterialTheme.colorScheme.onTertiary,
+                    fontSize = 12.sp,
+                    fontFamily = FustatFamily,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Category
+            Text(text = "Category", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
+            
+            ExposedDropdownMenuBox(
+                expanded = isCategoryDropdownExpanded,
+                onExpandedChange = { isCategoryDropdownExpanded = !isCategoryDropdownExpanded }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(30.dp)
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .clickable { isCategoryDropdownExpanded = true }
+                ) {
+                    Text(
+                        text = category.toDisplayString(),
+                        color = category.color,
+                        fontSize = 16.sp,
+                        fontFamily = FustatFamily,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+
+                ExposedDropdownMenu(
+                    expanded = isCategoryDropdownExpanded,
+                    onDismissRequest = { onDropdownDismissedByOutside() },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                    .heightIn(max = 205.dp)
+
+                ) {
+                    TaskCategory.entries.forEach { cat ->
+                        DropdownMenuItem(
+                            text = { 
+                                Text(
+                                    text = cat.toDisplayString(),
+                                    color = cat.color, 
+                                    fontFamily = FustatFamily,
+                                    fontWeight = FontWeight.ExtraBold
+                                ) 
+                            },
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
+                            onClick = {
+                                category = cat
+                                if (cat != TaskCategory.SOCIAL_ACTIVITY) {
+                                    selectedFriendIds = emptySet()
+                                    isFriendsPickerExpanded = false
+                                }
+                                isCategoryDropdownExpanded = false
+                            },
+                            colors = MenuDefaults.itemColors(
+                                textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                            )
+                        )
+                        if (cat != TaskCategory.entries.last()) {
+                            HorizontalDivider(modifier = Modifier
+                            .padding(horizontal = 18.dp))
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (category == TaskCategory.SOCIAL_ACTIVITY) {
+                LinkedFriendsPicker(
+                    friends = friends,
+                    selectedFriendIds = selectedFriendIds,
+                    expanded = isFriendsPickerExpanded,
+                    onExpandedChange = { open ->
+                        isFriendsPickerExpanded = open
+                        if (!open) {
+                            consumeNextOutsideClick = true
+                        }
+                    },
+                    onToggleFriend = { friendId ->
+                        selectedFriendIds = if (friendId in selectedFriendIds) {
+                            selectedFriendIds - friendId
+                        } else {
+                            selectedFriendIds + friendId
+                        }
+                    },
+                )
+            }
+
+            // Duration Dropdown
+            Text(text = "Duration", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
+            
+            ExposedDropdownMenuBox(
+                expanded = isDropdownExpanded,
+                onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.background)
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    val isSelected = duration > 0
+
+                    Text(
+                        text = if (isSelected) {
+                            when (duration) {
+                                5 -> "5+ hours"
+                                6 -> "Less than an hour"
+                                1 -> "1 hour"
+                                else -> "$duration hours"
+                            }
+                        } else {
+                            "Select duration"
+                        },
+                        fontSize = 16.sp,
+                        fontFamily = FustatFamily,
+                        
+                        color = if (isSelected) {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        }
+                    )
+
+                }
+
+                ExposedDropdownMenu(
+                    expanded = isDropdownExpanded,
+                    onDismissRequest = { onDropdownDismissedByOutside() },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), RoundedCornerShape(12.dp)) .heightIn(max = 205.dp)
+
+                ) {
+                    val options = listOf("<1", "1", "2", "3", "4", "5+")
+                    options.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(text = if(option == "5+") "5+ hours" else if(option == "<1") "Less than 1 hour" else if(option == "1") "1 hour" else "$option hours", fontFamily = FustatFamily) },
+                            onClick = {
+                                duration = when (option) {
+                                    "5+" -> 5
+                                    "<1" -> 6
+                                    else -> option.toInt()
+                                }
+                                isDropdownExpanded = false
+                            },
+
+                            colors = MenuDefaults.itemColors(
+                                textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                                disabledTextColor = MaterialTheme.colorScheme.tertiary
+                            ),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+                                
+                        )
+
+                        if (option != options.last()) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "Weekly",
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Switch(
+                    checked = isWeekly,
+                    onCheckedChange = { isWeekly = it },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
+                        checkedTrackColor = MaterialTheme.colorScheme.secondary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Buttons
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onDismiss) { Text("Cancel", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold) }
+                Button(
+                    onClick = {
+                        if (name.isBlank()) {
+                            isError = true
+                        } else {
+                            isError = false
+                            val friendIds =
+                                if (category == TaskCategory.SOCIAL_ACTIVITY) {
+                                    selectedFriendIds.toList()
+                                } else {
+                                    emptyList()
+                                }
+                            onSave(name, category, isWeekly, duration, friendIds)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                    Text("Save", color = MaterialTheme.colorScheme.onSecondary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
+                }
+            }
+        }
+    }
+    }
+}

@@ -1,13 +1,10 @@
 package com.plin.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import com.plin.ui.theme.FustatFamily
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,16 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,385 +24,206 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.plin.domain.enums.TaskCategory
-import com.plin.domain.enums.TaskStatus
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.slideOutHorizontally
 import com.plin.domain.models.Task
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlin.time.Duration.Companion.milliseconds
 
-private val CheckGreen = Color(0xFF16A34A)
-
-/**
- * First Plin screen: add a task and see the list from the local database.
- *
- * Short click toggles completed/pending; long press opens the inspect dialog.
- */
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = viewModel(),
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    val currentWeek by viewModel.currentWeek.collectAsStateWithLifecycle()
-    var showAddDialog by remember { mutableStateOf(false) }
-    var selectedTaskKey by remember { mutableStateOf<String?>(null) }
-    val selectedTask = tasks.find { "${it.id}-${it.instanceNumber}" == selectedTaskKey }
+    val friends by viewModel.friends.collectAsStateWithLifecycle()
+    val incompleteTasks = tasks.filter { !it.completed }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
+    var showAddOverlay by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 48.dp),
-    ) {
-        Text(
-            text = "Plin",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        currentWeek?.let { week ->
-            Text(
-                text = week.displayLabel,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-            )
-        }
-        Text(
-            text = "Tap to toggle done · long-press for details.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-        )
+    LaunchedEffect(Unit) {
+        viewModel.refreshMainView()
+    }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { showAddDialog = true },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text("Add task")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (tasks.isEmpty()) {
-            Text(
-                text = "No tasks yet.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-            )
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp),
-            ) {
-                items(tasks, key = { "${it.id}-${it.instanceNumber}" }) { task ->
-                    TaskRow(
-                        task = task,
-                        onClick = { viewModel.toggleTaskCompletion(task) },
-                        onLongClick = { selectedTaskKey = "${task.id}-${task.instanceNumber}" },
-                    )
-                }
-            }
+    LaunchedEffect(incompleteTasks.size) {
+        if (incompleteTasks.isNotEmpty()) {
+            listState.animateScrollToItem(0)
         }
     }
 
-    if (showAddDialog) {
-        AddTaskDialog(
-            onDismiss = { showAddDialog = false },
-            onSave = { title, category, isWeekly ->
-                viewModel.addTask(title, category, isWeekly)
-                showAddDialog = false
-            },
-        )
-    }
-
-    selectedTask?.let { task ->
-        TaskInspectDialog(
-            task = task,
-            onDismiss = { selectedTaskKey = null },
-            onUpdate = { updated -> viewModel.updateTask(updated) },
-            onStatusChange = { status -> viewModel.setStatus(task, status) },
-            onDelete = {
-                viewModel.deleteTask(task)
-                selectedTaskKey = null
-            },
-        )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun TaskRow(
-    task: Task,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
-    val isDone = task.status == TaskStatus.COMPLETED
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-            )
-            .padding(vertical = 8.dp, horizontal = 4.dp),
-    ) {
-        Text(
-            text = task.title,
-            style = MaterialTheme.typography.titleMedium,
-            textDecoration = if (isDone) TextDecoration.LineThrough else null,
-            color = MaterialTheme.colorScheme.onBackground.copy(
-                alpha = if (isDone) 0.45f else 1f,
-            ),
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 28.dp)
-                .align(Alignment.CenterStart),
-        )
-        if (isDone) {
-            Text(
-                text = "✓",
-                color = CheckGreen,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.TopEnd),
-            )
-        }
-    }
-}
-
-/**
- * Form for creating a task. Only user-editable fields — no ids or timestamps.
- */
-@Composable
-private fun AddTaskDialog(
-    onDismiss: () -> Unit,
-    onSave: (title: String, category: TaskCategory, isWeekly: Boolean) -> Unit,
-) {
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf(TaskCategory.GENERIC) }
-    var isWeekly by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("New task") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Title") },
-                )
-                CategoryPickerRow(
-                    category = category,
-                    onCategoryChange = { category = it },
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = isWeekly,
-                        onCheckedChange = { isWeekly = it },
-                    )
-                    Text(
-                        text = "Repeat every week",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 90.dp)
+        ) {
+            TodayCard(
+                onSizeMeasured = { height ->
+                viewModel.todayCardHeight = height
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = title.trim()
-                    if (trimmed.isNotEmpty()) {
-                        onSave(trimmed, category, isWeekly)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Tasks list goes here
+            if (incompleteTasks.isEmpty()) {
+                Text(
+                    text = "No tasks yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    items(incompleteTasks, key = { it.id }) { task ->
+                        // Local state to manage the animations
+                        // 0: Normal, 1: Filling, 2: Sliding out
+                        var animationState by remember { mutableIntStateOf(0) }
+                        val scope = rememberCoroutineScope()
+
+                        AnimatedVisibility (
+                            visible = animationState < 2,
+                            exit = slideOutHorizontally(
+                                targetOffsetX = { it },
+                                animationSpec = tween(durationMillis = 500)
+                            ) + fadeOut()
+                        ) {
+                            TaskItem(
+                                task = task.copy(completed = task.completed || animationState >= 1),
+                                onClick = {
+                                    if (!task.completed) {
+                                        animationState = 1
+                                        scope.launch {
+                                            delay(500.milliseconds)
+                                            animationState = 2 
+                                            delay(800.milliseconds)
+                                            viewModel.setCompleted(task, true)
+                                        }
+                                    }
+                                },
+                                onLongClick = { taskToEdit = task },
+                                onCompletedChange = { isDone ->
+                                    if (isDone) {
+                                        animationState = 1
+                                        scope.launch {
+                                            delay(500.milliseconds)
+                                            animationState = 2 // Sliding starts
+                                            delay(900.milliseconds) // Wait for the slide to finish
+                                            viewModel.setCompleted(task, true)
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+        ) {
+            Button(
+                onClick = { showAddOverlay = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "+ Add Task",
+                    fontSize = 16.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+
+           
+
+        //Black background dimming with fade in/out animation
+        AnimatedVisibility(
+            visible = showAddOverlay || taskToEdit != null,
+            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 300))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+            )
+        }
+
+        //Add task Overlay with scale and fade in/out animation
+        AnimatedVisibility(
+            visible = showAddOverlay,
+            enter = scaleIn(
+                initialScale = 0.8f,
+                animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+            ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+            exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+        ) {
+            AddTaskOverlay(
+                friends = friends,
+                onDismiss = { showAddOverlay = false },
+                onSave = { title, category, isWeekly, duration, friendIds ->
+                    viewModel.addTask(title, category, isWeekly, duration, friendIds)
+                    showAddOverlay = false
                 },
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
-}
-
-@Composable
-private fun CategoryPickerRow(
-    category: TaskCategory,
-    onCategoryChange: (TaskCategory) -> Unit,
-) {
-    var menuOpen by remember { mutableStateOf(false) }
-
-    Column {
-        Text(
-            text = "Category",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        )
-        Box {
-            Text(
-                text = formatCategory(category),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clickable { menuOpen = true }
-                    .padding(vertical = 2.dp),
             )
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false },
-            ) {
-                TaskCategory.entries.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(formatCategory(option)) },
-                        onClick = {
-                            onCategoryChange(option)
-                            menuOpen = false
-                        },
-                    )
-                }
-            }
         }
-    }
-}
 
-/**
- * Inspect window: edit task details, change status, or delete.
- */
-@Composable
-private fun TaskInspectDialog(
-    task: Task,
-    onDismiss: () -> Unit,
-    onUpdate: (Task) -> Unit,
-    onStatusChange: (TaskStatus) -> Unit,
-    onDelete: () -> Unit,
-) {
-    var title by remember(task.id, task.instanceNumber) { mutableStateOf(task.title) }
-    var category by remember(task.id, task.instanceNumber) { mutableStateOf(task.category) }
 
-    fun saveEditsAndDismiss() {
-        val trimmed = title.trim()
-        if (trimmed.isNotEmpty()) {
-            val updated = task.copy(title = trimmed, category = category)
-            if (updated.title != task.title || updated.category != task.category) {
-                onUpdate(updated)
-            }
-        }
-        onDismiss()
-    }
-
-    AlertDialog(
-        onDismissRequest = { saveEditsAndDismiss() },
-        title = { Text("Task details") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Name") },
+        //Edit task Overlay with scale and fade in/out animation
+        AnimatedVisibility(
+            visible = taskToEdit != null,
+            enter = scaleIn(
+                initialScale = 0.8f, 
+                animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+            ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+            exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+        ) {
+            taskToEdit?.let { task ->
+                EditTaskOverlay(
+                    task = task,
+                    friends = friends,
+                    onDismiss = { taskToEdit = null },
+                    onSave = { updated -> 
+                        viewModel.updateTask(updated)
+                        taskToEdit = null
+                    },
+                    onDelete = {
+                        viewModel.deleteTask(task)
+                        taskToEdit = null
+                    },
                 )
-                CategoryPickerRow(
-                    category = category,
-                    onCategoryChange = { category = it },
-                )
-                StatusDetailRow(
-                    status = task.status,
-                    onStatusChange = onStatusChange,
-                )
-                DetailRow(label = "Created", value = formatCreatedAt(task.createdAt))
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDelete) {
-                Text("Delete", color = MaterialTheme.colorScheme.error)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { saveEditsAndDismiss() }) {
-                Text("Close")
-            }
-        },
-    )
-}
-
-@Composable
-private fun StatusDetailRow(
-    status: TaskStatus,
-    onStatusChange: (TaskStatus) -> Unit,
-) {
-    var menuOpen by remember { mutableStateOf(false) }
-
-    Column {
-        Text(
-            text = "Status",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        )
-        Box {
-            Text(
-                text = status.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clickable { menuOpen = true }
-                    .padding(vertical = 2.dp),
-            )
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false },
-            ) {
-                TaskStatus.entries.filter { it != TaskStatus.ARCHIVED }.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option.name) },
-                        onClick = {
-                            onStatusChange(option)
-                            menuOpen = false
-                        },
-                    )
-                }
-            }
-        }
-        Text(
-            text = "Tap to change",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-        )
+        }       
+                    
     }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-    }
-}
-
-private fun formatCategory(category: TaskCategory): String =
-    category.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
-
-private fun formatCreatedAt(epochMillis: Long): String {
-    val formatter = DateTimeFormatter
-        .ofLocalizedDateTime(FormatStyle.MEDIUM)
-        .withZone(ZoneId.systemDefault())
-    return formatter.format(Instant.ofEpochMilli(epochMillis))
 }

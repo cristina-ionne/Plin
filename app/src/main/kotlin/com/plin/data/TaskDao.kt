@@ -27,23 +27,23 @@ interface TaskDao {
     @Query("SELECT COALESCE(MAX(id), 0) + 1 FROM tasks")
     suspend fun getNextTaskId(): Long
 
-    @Query("SELECT DISTINCT id FROM tasks WHERE isWeekly = 1")
-    suspend fun getWeeklyTaskIds(): List<Long>
+    @Query(
+        """
+        SELECT * FROM tasks
+        WHERE assignedWeek = :weekKey AND isWeekly = 1
+        """,
+    )
+    suspend fun getWeeklyTasksForWeek(weekKey: String): List<Task>
 
     @Query(
         """
         SELECT * FROM tasks
-        WHERE id = :taskId
-        AND createdAt >= :startMillis AND createdAt < :endMillisExclusive
+        WHERE id = :taskId AND assignedWeek = :weekKey
         ORDER BY instanceNumber DESC
         LIMIT 1
         """,
     )
-    suspend fun getInstanceInWeekRange(
-        taskId: Long,
-        startMillis: Long,
-        endMillisExclusive: Long,
-    ): Task?
+    suspend fun getInstanceForWeek(taskId: Long, weekKey: String): Task?
 
     @Query(
         """
@@ -58,13 +58,48 @@ interface TaskDao {
     @Query(
         """
         SELECT * FROM tasks
-        WHERE createdAt >= :startMillis AND createdAt < :endMillisExclusive
-        AND status != 'ARCHIVED'
-        ORDER BY createdAt DESC
+        WHERE assignedWeek = :weekKey
+        ORDER BY completed ASC,
+            CASE WHEN completed = 0 THEN createdAt ELSE COALESCE(completedAt, createdAt) END DESC
         """,
     )
-    fun observeForWeekRange(
-        startMillis: Long,
-        endMillisExclusive: Long,
-    ): Flow<List<Task>>
+    fun observeForAssignedWeek(weekKey: String): Flow<List<Task>>
+
+    @Query(
+        """
+        SELECT * FROM tasks
+        WHERE assignedWeek != '' AND assignedWeek < :weekKey
+        ORDER BY completed ASC,
+            CASE WHEN completed = 0 THEN createdAt ELSE COALESCE(completedAt, createdAt) END DESC
+        """,
+    )
+    fun observeBeforeWeek(weekKey: String): Flow<List<Task>>
+
+    @Query(
+        """
+        SELECT * FROM tasks
+        WHERE assignedWeek = :weekKey
+          AND category = 'SOCIAL_ACTIVITY'
+          AND (
+            title = 'Friend of the Week'
+            OR title LIKE 'Connect with %'
+          )
+        LIMIT 1
+        """,
+    )
+    suspend fun getFriendOfTheWeekForWeek(weekKey: String): Task?
+
+    @Query("SELECT * FROM tasks WHERE assignedWeek = '' OR assignedWeek IS NULL")
+    suspend fun getTasksMissingAssignedWeek(): List<Task>
+
+    @Query(
+        """
+        UPDATE tasks
+        SET assignedWeek = :newWeekKey
+        WHERE isWeekly = 0
+        AND completed = 0
+        AND assignedWeek != :newWeekKey
+        """,
+    )
+    suspend fun carryIncompleteNonWeeklyToWeek(newWeekKey: String)
 }
