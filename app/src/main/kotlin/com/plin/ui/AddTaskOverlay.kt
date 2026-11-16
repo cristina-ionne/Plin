@@ -104,12 +104,12 @@ fun AddTaskOverlay(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Name
-            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
+            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f))
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
                 placeholder = { Text("Enter task name", fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)) },
                 textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)),
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),

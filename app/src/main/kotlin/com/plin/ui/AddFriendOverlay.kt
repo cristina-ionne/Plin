@@ -57,7 +57,7 @@ fun AddFriendOverlay(
                 value = name, onValueChange = { name = it },
                 placeholder = { Text("Enter friend name", fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
                 textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)),
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = if (isErrorName) MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),

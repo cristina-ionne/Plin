@@ -108,7 +108,7 @@ fun EditTaskOverlay(
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
                 textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)),
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), focusedBorderColor = MaterialTheme.colorScheme.onSurface),
                 singleLine = true
