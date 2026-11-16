@@ -27,10 +27,8 @@ import com.plin.data.ThemePreferences
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.plin.domain.WeekCalendar
-import kotlinx.coroutines.launch
 
 private enum class PlinScreen {
     TASK_LIST,
@@ -55,7 +53,6 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
     var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
 
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     val systemInDark = isSystemInDarkTheme()
     val themePrefs = remember { ThemePreferences(context) }
