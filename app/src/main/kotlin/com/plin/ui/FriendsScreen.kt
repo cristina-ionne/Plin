@@ -113,6 +113,9 @@ fun FriendsScreen() {
                     color = MaterialTheme.colorScheme.onSecondary
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
         }
 
         //Black background dimming with fade in/out animation

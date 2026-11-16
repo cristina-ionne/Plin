@@ -162,6 +162,7 @@ fun TaskListScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
            

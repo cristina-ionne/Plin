@@ -78,16 +78,15 @@ fun BottomNavigation(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(125.dp)
-            .background(MaterialTheme.colorScheme.background),
-        verticalArrangement = Arrangement.Center
+            .height(100.dp)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         HorizontalDivider(modifier = Modifier.align(Alignment.Start).padding(bottom = 14.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
         )
 
         {
@@ -96,7 +95,7 @@ fun BottomNavigation(
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onSectionSelected(BottomNavigationSection.Home) },
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 TodayIcon(
                     selected = if (currentSection == BottomNavigationSection.Home) TodayIconSelected.On else TodayIconSelected.Off
@@ -115,7 +114,7 @@ fun BottomNavigation(
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onSectionSelected(BottomNavigationSection.Completed) },
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 CompletedIcon(selected = currentSection == BottomNavigationSection.Completed)
 
@@ -132,7 +131,7 @@ fun BottomNavigation(
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onSectionSelected(BottomNavigationSection.Friends) },
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 FriendsIcon(selected = currentSection == BottomNavigationSection.Friends)
                 Text(
@@ -148,14 +147,14 @@ fun BottomNavigation(
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onSectionSelected(BottomNavigationSection.Rewards) },
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 RewardsIcon(selected = currentSection == BottomNavigationSection.Rewards)
                 Text(
                     text = "Rewards",
                     fontSize = 12.sp,
                     fontFamily = FustatFamily,
-                    color = if (currentSection == BottomNavigationSection.Rewards) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
+                    color = if (currentSection == BottomNavigationSection.Rewards) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
