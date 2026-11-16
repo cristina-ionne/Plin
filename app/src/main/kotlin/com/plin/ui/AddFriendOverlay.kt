@@ -96,8 +96,15 @@ fun AddFriendOverlay(
                         contentDescription = null,
                         modifier = Modifier
                             .size(32.dp)
-                            .clickable { frequency = i },
-                        tint = if (isErrorFrequency) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.secondary
+                            .clickable {
+                                frequency = i
+                                isErrorFrequency = false // Removes the error when user picks a frequency
+                            },
+                        tint = when {
+                            isErrorFrequency -> MaterialTheme.colorScheme.onTertiary
+                            i <= frequency -> MaterialTheme.colorScheme.secondary 
+                            else -> MaterialTheme.colorScheme.secondary
+                        }
                     )
                 }
             }

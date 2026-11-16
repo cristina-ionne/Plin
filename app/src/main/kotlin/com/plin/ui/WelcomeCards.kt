@@ -218,9 +218,9 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 8.dp)
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                Image(painter = painterResource(id = R.drawable.ic_star), contentDescription = "Points")
+                Image(painter = painterResource(id = R.drawable.ic_star), contentDescription = "Points", modifier = Modifier.size(22.dp))
 
                 Text(
                     text = "$totalPoints",
@@ -228,7 +228,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
                     fontSize = 24.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                 )
 
                 Text (
@@ -237,7 +237,7 @@ fun RewardsCard(totalPoints: Int, fixedHeight: Int? = null) {
                     fontSize = 18.sp,
                     fontFamily = FustatFamily,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                 )
             }
         }
