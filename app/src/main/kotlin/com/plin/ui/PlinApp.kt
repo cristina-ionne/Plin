@@ -15,10 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.animation.*
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.mutableIntStateOf
 import com.plin.ui.theme.PlinTheme
 import androidx.compose.ui.platform.LocalContext
 import com.plin.data.FriendOfTheWeekSettingsStore
@@ -26,6 +24,11 @@ import com.plin.data.FriendService
 import com.plin.data.PlinDatabase
 import com.plin.data.TaskService
 import com.plin.data.ThemePreferences
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.plin.domain.WeekCalendar
 import kotlinx.coroutines.launch
 
@@ -51,14 +54,24 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
     // State to manage the currently selected section in the bottom navigation
     var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
 
-    // Status to track previous index
-    var previousIndex by remember { mutableIntStateOf(0) }
-
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     val systemInDark = isSystemInDarkTheme()
     val themePrefs = remember { ThemePreferences(context) }
+
+    val pagerState = rememberPagerState(pageCount = { 4 }) // 4 is the number of sections
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(pagerState.currentPage) {
+        val newSection = when (pagerState.currentPage) {
+            0 -> BottomNavigationSection.Home
+            1 -> BottomNavigationSection.Completed
+            2 -> BottomNavigationSection.Friends
+            else -> BottomNavigationSection.Rewards
+        }
+        currentBottomSection = newSection
+    }
     val friendOfTheWeekSettingsStore = remember { FriendOfTheWeekSettingsStore(context) }
     val database = remember { PlinDatabase.getInstance(context) }
     val friendService = remember {
@@ -93,23 +106,16 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             ) {
-            
-            // A. Main content ('when')
-            val targetIndex = currentBottomSection.toIndex()
                 
-            AnimatedContent(
-                targetState = screen,
-                transitionSpec = {
-                    val direction = if (targetIndex > previousIndex) 1 else -1
-                    (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith (slideOutHorizontally(targetOffsetX = { it * -direction }) + fadeOut())
-                },
-                label = "screen_slide"
-            ) { targetScreen ->
-                when (targetScreen) {
-                    PlinScreen.TASK_LIST -> TaskListScreen()
-                    PlinScreen.COMPLETED_SCREEN -> CompletedScreen(viewModel)
-                    PlinScreen.REWARDS -> RewardsScreen(viewModel)
-                    PlinScreen.FRIENDS -> FriendsScreen()
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when (page) {
+                    0 -> TaskListScreen()
+                    1 -> CompletedScreen(viewModel)
+                    2 -> FriendsScreen()
+                    3 -> RewardsScreen(viewModel)
                 }
             }
 
@@ -149,11 +155,15 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
             // Calling BottomNavigation and passing the current selected section
             BottomNavigation(
                 currentSection = currentBottomSection,
-                onSectionSelected = { section ->
-                    // Update index before changing screen
-                    previousIndex = currentBottomSection.toIndex()
+                onSectionSelected = { section ->                    
                     showSettingsOverlay = false
                     currentBottomSection = section
+                    val index = section.toIndex()
+
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(index)
+                    }
+
                     // Manage the action on section change:
                     when (section) {
                         BottomNavigationSection.Home -> {
