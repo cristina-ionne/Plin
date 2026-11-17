@@ -25,19 +25,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextAlign
+
+
 
 @Composable
 fun WelcomeOverlay(
     onDismiss: () -> Unit,
-    onToggleFriendOfTheWeek: (Boolean) -> Unit) {
-
-    var isEnabled by remember { mutableStateOf(false) }
+    checked: Boolean,
+    onToggleFriendOfTheWeek: (Boolean) -> Unit){
 
     Box(
         modifier = Modifier
@@ -82,11 +79,8 @@ fun WelcomeOverlay(
 
                 FeatureSwitchRow(
                     label = "Friend of the Week feature",
-                    checked = isEnabled,
-                    onCheckedChange = { newValue ->
-                        isEnabled = newValue
-                        onToggleFriendOfTheWeek(newValue)
-                    }
+                    checked = checked,
+                    onCheckedChange = onToggleFriendOfTheWeek
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))

@@ -41,7 +41,6 @@ import com.plin.domain.WeekCalendar
 import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
 import android.app.Application
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import com.plin.data.WelcomeSettings
 
@@ -86,10 +85,13 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
     var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
 
     val systemInDark = isSystemInDarkTheme()
-    val themePrefs = remember { ThemePreferences(context) }
 
     val pagerState = rememberPagerState(pageCount = { 4 }) // 4 is the number of sections
     val coroutineScope = rememberCoroutineScope()
+
+    val themePrefs = remember { ThemePreferences(context) }
+    var isFriendOfTheWeekEnabled by remember { mutableStateOf(themePrefs.isFriendOfTheWeekEnabled()) }
+
 
     LaunchedEffect(pagerState.currentPage) {
         val newSection = when (pagerState.currentPage) {
@@ -116,9 +118,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
             else systemInDark
         ) 
     }
-    var isFriendOfTheWeekEnabled by remember {
-        mutableStateOf(friendOfTheWeekSettingsStore.isEnabled())
-    }
+
 
     var showAddOverlay by remember { mutableStateOf(false) }
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
@@ -261,7 +261,11 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
             ) {
                 WelcomeOverlay(
                     onDismiss = { showWelcomeOverlay = false },
-                    onToggleFriendOfTheWeek = { isFriendOfTheWeekEnabled }
+                    checked = isFriendOfTheWeekEnabled,
+                    onToggleFriendOfTheWeek = { newValue ->
+                        isFriendOfTheWeekEnabled = newValue
+                        themePrefs.setFriendOfTheWeekEnabled(newValue)
+                    }
                 )
             }
 
