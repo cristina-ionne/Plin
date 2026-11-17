@@ -41,6 +41,7 @@ import com.plin.domain.WeekCalendar
 import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
 import android.app.Application
+import com.plin.data.WelcomeSettings
 
 private enum class PlinScreen {
     TASK_LIST,
@@ -57,10 +58,21 @@ private fun BottomNavigationSection.toIndex(): Int = when (this) {
 }
 
 @Composable
-fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
+fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
+
+    //Variables for the welcome overlay
+    val context = LocalContext.current
+    val welcomeSettings = remember { WelcomeSettings(context) }
+    var showWelcomeOverlay by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (!welcomeSettings.hasShownWelcome()) {
+            showWelcomeOverlay = true
+            welcomeSettings.setShownWelcome()
+        }
+    }
 
     //variables to change the viewModel on the FriendsScreen
-    val context = LocalContext.current
     val application = context.applicationContext as Application
     val friendViewModel: FriendListViewModel = viewModel(
         factory = FriendListViewModel.FriendViewModelFactory(application)
@@ -221,7 +233,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
 
             //Black background dimming with fade in/out animation
             AnimatedVisibility(
-                visible = showAddOverlay || taskToEdit != null || showAddFriendOverlay || friendToEdit != null,
+                visible = showWelcomeOverlay || showAddOverlay || taskToEdit != null || showAddFriendOverlay || friendToEdit != null,
                 enter = fadeIn(animationSpec = tween(durationMillis = 300)),
                 exit = fadeOut(animationSpec = tween(durationMillis = 300))
             ) {
@@ -229,6 +241,21 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) { //
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.70f))
+                )
+            }
+
+            //Welcome overlay with scale and fade in/out animation
+            AnimatedVisibility(
+                visible = showWelcomeOverlay,
+                enter = scaleIn(
+                    initialScale = 0.9f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                ) + fadeIn(animationSpec = tween(durationMillis = 300)),
+                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+            ) {
+                WelcomeOverlay(
+                    onDismiss = { showWelcomeOverlay = false },
+                    onToggleFriendOfTheWeek = { isFriendOfTheWeekEnabled }
                 )
             }
 
