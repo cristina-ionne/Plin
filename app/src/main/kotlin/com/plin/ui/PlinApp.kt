@@ -41,6 +41,8 @@ import com.plin.domain.WeekCalendar
 import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
 import android.app.Application
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import com.plin.data.WelcomeSettings
 
 private enum class PlinScreen {
@@ -128,7 +130,11 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
     PlinTheme(useDarkTheme = isDarkTheme) {
 
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .navigationBarsPadding()
+
+            ) {
                 // 1. Upper Navbar
                 NavBar(
                     isDarkTheme = isDarkTheme,
