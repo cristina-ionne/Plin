@@ -1,5 +1,6 @@
 package com.plin.ui
 
+import androidx.compose.animation.AnimatedContent
 import com.plin.ui.theme.FustatFamily
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +27,22 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.res.painterResource
+import com.plin.R
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.remember
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -303,26 +320,42 @@ fun AddTaskOverlay(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                AnimatedContent(
+                    targetState = isWeekly,
+                    label = "weekly_checkbox_animation"
+                ) { checked ->
+                    if (checked) {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable { isWeekly = false },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_completed_white),
+                                contentDescription = "Weekly",
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), CircleShape)
+                                .clickable { isWeekly = true }
+                        )
+                    }
+                }
+
                 Text(
                     text = "Weekly",
                     fontSize = 16.sp,
                     fontFamily = FustatFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Switch(
-                    checked = isWeekly,
-                    onCheckedChange = { isWeekly = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
-                        checkedTrackColor = MaterialTheme.colorScheme.secondary,
-                        uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
 

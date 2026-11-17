@@ -46,12 +46,12 @@ fun LinkedFriendsPicker(
 ) {
     val selectedFriends = friends.filter { it.id in selectedFriendIds }
     val summaryText = when {
-        selectedFriends.isEmpty() -> "No friends linked"
+        selectedFriends.isEmpty() -> "No linked friends"
         else -> selectedFriends.joinToString(separator = ", ") { it.name }
     }
 
     Text(
-        text = "Linked friends",
+        text = "Link a friend to this task",
         fontSize = 14.sp,
         fontFamily = FustatFamily,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
