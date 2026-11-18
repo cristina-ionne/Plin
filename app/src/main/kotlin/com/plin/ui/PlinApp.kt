@@ -186,8 +186,8 @@ fun PlinApp(
                     // Animation for SettingsOverlay
                     androidx.compose.animation.AnimatedVisibility(
                         visible = showSettingsOverlay,
-                        enter = if (closingCategoryMenu) { slideInHorizontally(initialOffsetX = { -it })
-                            } else { slideInHorizontally(initialOffsetX = { it }) },
+                        enter = if (closingCategoryMenu) { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(durationMillis = 400))
+                            } else { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(durationMillis = 400)) },
                         exit = if (screen == PlinScreen.CATEGORIES) {
                             slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(durationMillis = 400))
                             } else {slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(durationMillis = 400)) }
