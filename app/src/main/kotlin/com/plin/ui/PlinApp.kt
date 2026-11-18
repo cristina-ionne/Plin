@@ -169,7 +169,8 @@ fun PlinApp(
                                     onEditTask = { taskToEdit = it }
                                 )
 
-                                1 -> CompletedScreen(viewModel)
+                                1 -> CompletedScreen(viewModel = viewModel,
+                                    onEditTask = { taskToEdit = it })
                                 2 -> FriendsScreen(
                                     onAddFriend = { showAddFriendOverlay = true },
                                     onEditFriend = { friendToEdit = it }
