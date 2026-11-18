@@ -48,7 +48,8 @@ private enum class PlinScreen {
     TASK_LIST,
     COMPLETED_SCREEN,
     FRIENDS,
-    REWARDS
+    REWARDS,
+    CATEGORIES
 }
 
 private fun BottomNavigationSection.toIndex(): Int = when (this) {
@@ -126,241 +127,267 @@ fun PlinApp(
     PlinTheme(useDarkTheme = currentDarkTheme) {
 
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .navigationBarsPadding()
 
-            ) {
-                // 1. Upper Navbar
-                NavBar(
-                    isDarkTheme = currentDarkTheme,
-                    onProfileClick = { showSettingsOverlay = !showSettingsOverlay })
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                        .navigationBarsPadding()
 
-                // 2. Only Box that contains the rest
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
                 ) {
-
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize()
-                    ) { page ->
-                        when (page) {
-                            0 -> TaskListScreen(
-                                onAddTask = { showAddOverlay = true },
-                                onEditTask = { taskToEdit = it }
-                            )
-
-                            1 -> CompletedScreen(viewModel)
-                            2 -> FriendsScreen(
-                                onAddFriend = { showAddFriendOverlay = true },
-                                onEditFriend = { friendToEdit = it }
-                            )
-                            3 -> RewardsScreen(viewModel)
-                        }
-                    }
-
-                    // B. Animation over the 'when'
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = showSettingsOverlay,
-                        enter = slideInHorizontally(initialOffsetX = { it }),
-                        exit = slideOutHorizontally(
-                            targetOffsetX = { it },
-                            animationSpec = tween(durationMillis = 400) // Slightly increase the duration for a smoother animation
-                        )
-                    ) {
-                        SettingsOverlay(
-                            isDarkTheme = currentDarkTheme,
-                            onToggleTheme = { enabled ->
-                                onThemeChanged(enabled)
-                            },
-                            isFriendOfTheWeekEnabled = isFriendOfTheWeekEnabled,
-                            onToggleFriendOfTheWeek = { enabled ->
-                                friendOfTheWeekSettingsStore.setEnabled(enabled)
-                                isFriendOfTheWeekEnabled = enabled
-                                if (enabled) {
-                                    coroutineScope.launch {
-                                        taskService.ensureFriendOfTheWeekTask(
-                                            week = WeekCalendar.forDate(),
-                                            friends = friendService.getAllFriends(),
-                                        )
-                                    }
-                                }
-                            },
-                            onNavigateToCategories = { showSettingsOverlay = false },
-                        )
-                    }
-                }
-
-                // Calling BottomNavigation and passing the current selected section
-                BottomNavigation(
-                    currentSection = currentBottomSection,
-                    onSectionSelected = { section ->
-                        showSettingsOverlay = false
-                        currentBottomSection = section
-                        val index = section.toIndex()
-
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-
-                        // Manage the action on section change:
-                        when (section) {
-                            BottomNavigationSection.Home -> {
-                                viewModel.selectTab(TaskListTab.CURRENT_WEEK)
+                    // 1. Upper Navbar
+                    NavBar(
+                        isDarkTheme = currentDarkTheme,
+                        onProfileClick = {
+                            if (screen == PlinScreen.CATEGORIES) {
                                 screen = PlinScreen.TASK_LIST
+                                showSettingsOverlay = true
+                            } else {
+                                showSettingsOverlay = !showSettingsOverlay
+                            }
+                        }
+                    )
+
+                    // 2. Only Box that contains the rest
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                    ) {
+
+                        if (screen == PlinScreen.CATEGORIES) {
+
+                            CategoriesScreen(
+                                onBackClick = {
+                                    screen = PlinScreen.TASK_LIST
+                                    showSettingsOverlay = true
+                                },
+                                onEditCategory = { category ->
+                                    // edit logic
+                                }
+                            )
+                        } else {
+
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier.fillMaxSize()
+                            ) { page ->
+                                when (page) {
+                                    0 -> TaskListScreen(
+                                        onAddTask = { showAddOverlay = true },
+                                        onEditTask = { taskToEdit = it }
+                                    )
+
+                                    1 -> CompletedScreen(viewModel)
+                                    2 -> FriendsScreen(
+                                        onAddFriend = { showAddFriendOverlay = true },
+                                        onEditFriend = { friendToEdit = it }
+                                    )
+
+                                    3 -> RewardsScreen(viewModel)
+                                }
                             }
 
-                            BottomNavigationSection.Completed -> {
-                                viewModel.selectTab(TaskListTab.ARCHIVE)
-                                screen = PlinScreen.COMPLETED_SCREEN
-                            }
-
-                            BottomNavigationSection.Friends -> {
-                                screen = PlinScreen.FRIENDS
-                            }
-
-                            BottomNavigationSection.Rewards -> {
-                                screen = PlinScreen.REWARDS
+                            // B. Animation over the 'when'
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = showSettingsOverlay,
+                                enter = slideInHorizontally(initialOffsetX = { it }),
+                                exit = slideOutHorizontally(
+                                    targetOffsetX = { it },
+                                    animationSpec = tween(durationMillis = 400) // Slightly increase the duration for a smoother animation
+                                )
+                            ) {
+                                SettingsOverlay(
+                                    isDarkTheme = currentDarkTheme,
+                                    onToggleTheme = { enabled ->
+                                        onThemeChanged(enabled)
+                                    },
+                                    isFriendOfTheWeekEnabled = isFriendOfTheWeekEnabled,
+                                    onToggleFriendOfTheWeek = { enabled ->
+                                        friendOfTheWeekSettingsStore.setEnabled(enabled)
+                                        isFriendOfTheWeekEnabled = enabled
+                                        if (enabled) {
+                                            coroutineScope.launch {
+                                                taskService.ensureFriendOfTheWeekTask(
+                                                    week = WeekCalendar.forDate(),
+                                                    friends = friendService.getAllFriends(),
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onNavigateToCategories = {
+                                        showSettingsOverlay = false
+                                        screen = PlinScreen.CATEGORIES
+                                    }
+                                )
                             }
                         }
                     }
-                )
 
-            }
+                    // Calling BottomNavigation and passing the current selected section
+                    BottomNavigation(
+                        currentSection = currentBottomSection,
+                        onSectionSelected = { section ->
+                            showSettingsOverlay = false
+                            currentBottomSection = section
+                            val index = section.toIndex()
 
-            //Black background dimming with fade in/out animation
-            AnimatedVisibility(
-                visible = showWelcomeOverlay || showAddOverlay || taskToEdit != null || showAddFriendOverlay || friendToEdit != null,
-                enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 300))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.70f))
-                )
-            }
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
 
-            //Welcome overlay with scale and fade in/out animation
-            AnimatedVisibility(
-                visible = showWelcomeOverlay,
-                enter = scaleIn(
-                    initialScale = 0.9f,
-                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300)),
-                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-            ) {
-                WelcomeOverlay(
-                    onDismiss = { showWelcomeOverlay = false },
-                    checked = isFriendOfTheWeekEnabled,
-                    onToggleFriendOfTheWeek = { newValue ->
-                        isFriendOfTheWeekEnabled = newValue
-                        themePrefs.setFriendOfTheWeekEnabled(newValue)
-                    }
-                )
-            }
+                            // Manage the action on section change:
+                            when (section) {
+                                BottomNavigationSection.Home -> {
+                                    viewModel.selectTab(TaskListTab.CURRENT_WEEK)
+                                    screen = PlinScreen.TASK_LIST
+                                }
 
-            //Add task Overlay with scale and fade in/out animation
-            AnimatedVisibility(
-                visible = showAddOverlay,
-                enter = scaleIn(
-                    initialScale = 0.8f,
-                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-            ) {
-                AddTaskOverlay(
-                    friends = friends,
-                    onDismiss = { showAddOverlay = false },
-                    onSave = { title, category, isWeekly, duration, friendIds ->
-                        viewModel.addTask(title, category, isWeekly, duration, friendIds)
-                        showAddOverlay = false
-                    },
-                )
-            }
+                                BottomNavigationSection.Completed -> {
+                                    viewModel.selectTab(TaskListTab.ARCHIVE)
+                                    screen = PlinScreen.COMPLETED_SCREEN
+                                }
 
+                                BottomNavigationSection.Friends -> {
+                                    screen = PlinScreen.FRIENDS
+                                }
 
-            //Edit task Overlay with scale and fade in/out animation
-            AnimatedVisibility(
-                visible = taskToEdit != null,
-                enter = scaleIn(
-                    initialScale = 0.8f,
-                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-            ) {
-                taskToEdit?.let { task ->
-                    EditTaskOverlay(
-                        task = task,
-                        friends = friends,
-                        onDismiss = { taskToEdit = null },
-                        onSave = { updated ->
-                            viewModel.updateTask(updated)
-                            taskToEdit = null
-                        },
-                        onDelete = {
-                            viewModel.deleteTask(task)
-                            taskToEdit = null
-                        },
+                                BottomNavigationSection.Rewards -> {
+                                    screen = PlinScreen.REWARDS
+                                }
+                            }
+                        }
                     )
-                }
-            }
 
-            //Add Friend Overlay with scale and fade in/out animation
-            AnimatedVisibility(
-                visible = showAddFriendOverlay,
-                enter = scaleIn(
-                    initialScale = 0.8f,
-                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                }
+
+                //Black background dimming with fade in/out animation
+                AnimatedVisibility(
+                    visible = showWelcomeOverlay || showAddOverlay || taskToEdit != null || showAddFriendOverlay || friendToEdit != null,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 300))
                 ) {
-                    AddFriendOverlay(
-                        onDismiss = { showAddFriendOverlay = false },
-                        onSave = { name, freq ->
-                            friendViewModel.addFriend(name, freq)
-                            showAddFriendOverlay = false
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.70f))
+                    )
+                }
+
+                //Welcome overlay with scale and fade in/out animation
+                AnimatedVisibility(
+                    visible = showWelcomeOverlay,
+                    enter = scaleIn(
+                        initialScale = 0.9f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 300)),
+                    exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+                ) {
+                    WelcomeOverlay(
+                        onDismiss = { showWelcomeOverlay = false },
+                        checked = isFriendOfTheWeekEnabled,
+                        onToggleFriendOfTheWeek = { newValue ->
+                            isFriendOfTheWeekEnabled = newValue
+                            themePrefs.setFriendOfTheWeekEnabled(newValue)
                         }
                     )
                 }
-            }
 
-            //Edit Task Overlay with scale and fade in/out animation
-            AnimatedVisibility(
-                visible = friendToEdit != null,
-                enter = scaleIn(
-                    initialScale = 0.8f,
-                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    friendToEdit?.let { friend ->
-                        EditFriendOverlay(
-                            friend = friend,
-                            onDismiss = { friendToEdit = null },
+                //Add task Overlay with scale and fade in/out animation
+                AnimatedVisibility(
+                    visible = showAddOverlay,
+                    enter = scaleIn(
+                        initialScale = 0.8f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                    exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+                ) {
+                    AddTaskOverlay(
+                        friends = friends,
+                        onDismiss = { showAddOverlay = false },
+                        onSave = { title, category, isWeekly, duration, friendIds ->
+                            viewModel.addTask(title, category, isWeekly, duration, friendIds)
+                            showAddOverlay = false
+                        }
+                    )
+                }
+
+
+                //Edit task Overlay with scale and fade in/out animation
+                AnimatedVisibility(
+                    visible = taskToEdit != null,
+                    enter = scaleIn(
+                        initialScale = 0.8f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                    exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+                ) {
+                    taskToEdit?.let { task ->
+                        EditTaskOverlay(
+                            task = task,
+                            friends = friends,
+                            onDismiss = { taskToEdit = null },
                             onSave = { updated ->
-                                friendViewModel.updateFriend(updated)
-                                friendToEdit = null
+                                viewModel.updateTask(updated)
+                                taskToEdit = null
                             },
                             onDelete = {
-                                friendViewModel.deleteFriend(friend)
-                                friendToEdit = null
+                                viewModel.deleteTask(task)
+                                taskToEdit = null
+                            },
+                        )
+                    }
+                }
+
+                //Add Friend Overlay with scale and fade in/out animation
+                AnimatedVisibility(
+                    visible = showAddFriendOverlay,
+                    enter = scaleIn(
+                        initialScale = 0.8f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                    exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AddFriendOverlay(
+                            onDismiss = { showAddFriendOverlay = false },
+                            onSave = { name, freq ->
+                                friendViewModel.addFriend(name, freq)
+                                showAddFriendOverlay = false
                             }
                         )
                     }
                 }
+
+                //Edit Task Overlay with scale and fade in/out animation
+                AnimatedVisibility(
+                    visible = friendToEdit != null,
+                    enter = scaleIn(
+                        initialScale = 0.8f,
+                        animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                    exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        friendToEdit?.let { friend ->
+                            EditFriendOverlay(
+                                friend = friend,
+                                onDismiss = { friendToEdit = null },
+                                onSave = { updated ->
+                                    friendViewModel.updateFriend(updated)
+                                    friendToEdit = null
+                                },
+                                onDelete = {
+                                    friendViewModel.deleteFriend(friend)
+                                    friendToEdit = null
+                                }
+                            )
+                        }
+                    }
+                }
             }
-
-
         }
     }
-}
+

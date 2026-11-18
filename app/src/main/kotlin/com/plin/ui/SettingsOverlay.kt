@@ -44,7 +44,7 @@ fun SettingsOverlay(
         Spacer(modifier = Modifier.height(20.dp))
 
         //Categories section
-        SettingsSection("Categories", onClick = onNavigateToCategories)
+        SettingsSection("Manage categories", onClick = onNavigateToCategories)
 
         Spacer(modifier = Modifier.height(20.dp))
 
