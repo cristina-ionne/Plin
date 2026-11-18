@@ -12,7 +12,12 @@ import com.plin.ui.theme.PlinTheme
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
+import com.plin.data.ThemePreferences
 
 
 /**
@@ -23,9 +28,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         android.util.Log.d("PLIN", "MainActivity started")
         enableEdgeToEdge()
+
+        val themePrefs = ThemePreferences(applicationContext)
+
         setContent {
 
-            val isDarkTheme = isSystemInDarkTheme()
+            val systemInDark = isSystemInDarkTheme()
+
+            var isDarkTheme by remember {
+                mutableStateOf(
+                    if (themePrefs.hasPreference()) themePrefs.isDarkMode()
+                    else systemInDark
+                )
+            }
+
             val view = LocalView.current
 
             SideEffect {
@@ -44,7 +60,13 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    PlinApp()
+                    PlinApp(
+                        currentDarkTheme = isDarkTheme,
+                        onThemeChanged = { newTheme ->
+                            isDarkTheme = newTheme
+                            themePrefs.setDarkMode(newTheme)
+                        }
+                    )
                 }
             }
         }

@@ -59,7 +59,11 @@ private fun BottomNavigationSection.toIndex(): Int = when (this) {
 }
 
 @Composable
-fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
+fun PlinApp(
+    viewModel: TaskListViewModel = viewModel(),
+    currentDarkTheme: Boolean = isSystemInDarkTheme(),
+    onThemeChanged: (Boolean) -> Unit = {}
+) {
 
     //Variables for the welcome overlay
     val context = LocalContext.current
@@ -83,8 +87,6 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
     var screen by remember { mutableStateOf(PlinScreen.TASK_LIST) }
     // State to manage the currently selected section in the bottom navigation
     var currentBottomSection by remember { mutableStateOf(BottomNavigationSection.Home) }
-
-    val systemInDark = isSystemInDarkTheme()
 
     val pagerState = rememberPagerState(pageCount = { 4 }) // 4 is the number of sections
     val coroutineScope = rememberCoroutineScope()
@@ -113,14 +115,6 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
         )
     }
     val taskService = remember { TaskService(database.taskDao()) }
-    
-    var isDarkTheme by remember { 
-        mutableStateOf(
-            if (themePrefs.hasPreference()) themePrefs.isDarkMode() 
-            else systemInDark
-        ) 
-    }
-
 
     var showAddOverlay by remember { mutableStateOf(false) }
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
@@ -129,7 +123,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
     var showAddFriendOverlay by remember { mutableStateOf(false) }
     var friendToEdit by remember { mutableStateOf<Friend?>(null) }
 
-    PlinTheme(useDarkTheme = isDarkTheme) {
+    PlinTheme(useDarkTheme = currentDarkTheme) {
 
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -139,7 +133,7 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
             ) {
                 // 1. Upper Navbar
                 NavBar(
-                    isDarkTheme = isDarkTheme,
+                    isDarkTheme = currentDarkTheme,
                     onProfileClick = { showSettingsOverlay = !showSettingsOverlay })
 
                 // 2. Only Box that contains the rest
@@ -179,10 +173,9 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
                         )
                     ) {
                         SettingsOverlay(
-                            isDarkTheme = isDarkTheme,
-                            onToggleTheme = {
-                                isDarkTheme = it
-                                themePrefs.setDarkMode(it)
+                            isDarkTheme = currentDarkTheme,
+                            onToggleTheme = { enabled ->
+                                onThemeChanged(enabled)
                             },
                             isFriendOfTheWeekEnabled = isFriendOfTheWeekEnabled,
                             onToggleFriendOfTheWeek = { enabled ->
