@@ -16,6 +16,6 @@ class WelcomeSettings(context: Context) {
      * Saves the value.
      */
     fun setShownWelcome() {
-        prefs.edit { putBoolean("has_shown_welcome", false) }
+        prefs.edit { putBoolean("has_shown_welcome", true) }
     }
 }

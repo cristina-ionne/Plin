@@ -55,100 +55,88 @@ fun WelcomeOverlay(
                     .padding(30.dp)
             ) {
 
-                Text(
-                    text = "Welcome to Plin!",
-                    fontSize = 36.sp,
-                    lineHeight = 40.sp,
-                    fontFamily = FustatFamily,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Welcome to Plin!",
+                        fontSize = 36.sp,
+                        lineHeight = 40.sp,
+                        fontFamily = FustatFamily,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                Text(
-                    text = "Here you can plan your week without feeling the pressure of performing and completing your to-do list.",
-                    textAlign = TextAlign.Justify,
-                    fontSize = 14.sp,
-                    lineHeight = 18.sp,
-                    fontFamily = FustatFamily,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
-                )
+                    Text(
+                        text = "Here you can plan your week without feeling the pressure of performing and completing your to-do list.",
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp,
+                        fontFamily = FustatFamily,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                FeatureSwitchRow(
-                    label = "Friend of the Week feature",
-                    checked = checked,
-                    onCheckedChange = onToggleFriendOfTheWeek
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Duration Dropdown
-                Text(text = "Stay in touch with your friends! This feature allows you to pick a random friend from your friends list, and add a task to connect with them.",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Justify,
-                    lineHeight = 18.sp,
-                    fontFamily = FustatFamily,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // "Got it" Button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(
-                        onClick = { onDismiss() },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Got it!",
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            fontSize = 16.sp,
+                            text = "Friend of the Week",
                             fontFamily = FustatFamily,
-                            fontWeight = FontWeight.ExtraBold
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.SemiBold
                         )
+                        Switch(
+                            checked = checked,
+                            onCheckedChange = onToggleFriendOfTheWeek,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
+                                checkedTrackColor = MaterialTheme.colorScheme.secondary,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.scale(0.8f).padding(12.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Duration Dropdown
+                    Text(
+                        text = "This feature allows you to pick a random friend from your friends list, and add a task to connect with them. Stay in touch with your friends!",
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp,
+                        fontFamily = FustatFamily,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // "Got it" Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = { onDismiss() },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Text(
+                                text = "Got it!",
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                fontSize = 16.sp,
+                                fontFamily = FustatFamily,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
                     }
                 }
 
             }
         }
-    }
-}
-
-@Composable
-private fun FeatureSwitchRow(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label,
-            fontFamily = FustatFamily,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.secondary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onSecondary,
-                checkedTrackColor = MaterialTheme.colorScheme.secondary,
-                uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                uncheckedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                uncheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            ),
-            modifier = Modifier.scale(0.8f)
-        )
     }
 }

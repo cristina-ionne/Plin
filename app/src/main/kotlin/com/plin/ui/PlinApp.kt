@@ -90,7 +90,6 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
     val coroutineScope = rememberCoroutineScope()
 
     val themePrefs = remember { ThemePreferences(context) }
-    var isFriendOfTheWeekEnabled by remember { mutableStateOf(themePrefs.isFriendOfTheWeekEnabled()) }
 
 
     LaunchedEffect(pagerState.currentPage) {
@@ -102,7 +101,10 @@ fun PlinApp(viewModel: TaskListViewModel = viewModel()) {
         }
         currentBottomSection = newSection
     }
+
     val friendOfTheWeekSettingsStore = remember { FriendOfTheWeekSettingsStore(context) }
+    var isFriendOfTheWeekEnabled by remember { mutableStateOf(friendOfTheWeekSettingsStore.isEnabled()) }
+
     val database = remember { PlinDatabase.getInstance(context) }
     val friendService = remember {
         FriendService(

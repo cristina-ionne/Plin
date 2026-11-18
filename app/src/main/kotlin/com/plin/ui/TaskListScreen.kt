@@ -48,7 +48,6 @@ fun TaskListScreen(
     onEditTask: (Task) -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    val friends by viewModel.friends.collectAsStateWithLifecycle()
     val incompleteTasks = tasks.filter { !it.completed }
     val listState = rememberLazyListState()
 
