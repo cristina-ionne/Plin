@@ -1,8 +1,6 @@
 package com.plin.ui
 
 import com.plin.ui.theme.FustatFamily
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,12 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,31 +29,26 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.animation.slideOutHorizontally
-import com.plin.domain.models.Task
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import com.plin.domain.models.Task
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TaskListScreen(
     viewModel: TaskListViewModel = viewModel(),
+    onAddTask: () -> Unit,
+    onEditTask: (Task) -> Unit
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    val friends by viewModel.friends.collectAsStateWithLifecycle()
     val incompleteTasks = tasks.filter { !it.completed }
-    var taskToEdit by remember { mutableStateOf<Task?>(null) }
-    var showAddOverlay by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -87,8 +78,12 @@ fun TaskListScreen(
             if (incompleteTasks.isEmpty()) {
                 Text(
                     text = "No tasks yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontFamily = FustatFamily,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp)
                 )
             } else {
                 LazyColumn(
@@ -122,7 +117,7 @@ fun TaskListScreen(
                                         }
                                     }
                                 },
-                                onLongClick = { taskToEdit = task },
+                                onLongClick = { onEditTask(task) },
                                 onCompletedChange = { isDone ->
                                     if (isDone) {
                                         animationState = 1
@@ -146,7 +141,7 @@ fun TaskListScreen(
                 .align(Alignment.BottomCenter)
         ) {
             Button(
-                onClick = { showAddOverlay = true },
+                onClick = { onAddTask() },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,68 +157,8 @@ fun TaskListScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
+            Spacer(modifier = Modifier.height(24.dp))
         }
-
-           
-
-        //Black background dimming with fade in/out animation
-        AnimatedVisibility(
-            visible = showAddOverlay || taskToEdit != null,
-            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 300))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-            )
-        }
-
-        //Add task Overlay with scale and fade in/out animation
-        AnimatedVisibility(
-            visible = showAddOverlay,
-            enter = scaleIn(
-                initialScale = 0.8f,
-                animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-            ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-            exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-        ) {
-            AddTaskOverlay(
-                friends = friends,
-                onDismiss = { showAddOverlay = false },
-                onSave = { title, category, isWeekly, duration, friendIds ->
-                    viewModel.addTask(title, category, isWeekly, duration, friendIds)
-                    showAddOverlay = false
-                },
-            )
-        }
-
-
-        //Edit task Overlay with scale and fade in/out animation
-        AnimatedVisibility(
-            visible = taskToEdit != null,
-            enter = scaleIn(
-                initialScale = 0.8f, 
-                animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
-            ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
-            exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
-        ) {
-            taskToEdit?.let { task ->
-                EditTaskOverlay(
-                    task = task,
-                    friends = friends,
-                    onDismiss = { taskToEdit = null },
-                    onSave = { updated -> 
-                        viewModel.updateTask(updated)
-                        taskToEdit = null
-                    },
-                    onDelete = {
-                        viewModel.deleteTask(task)
-                        taskToEdit = null
-                    },
-                )
-            }
-        }       
                     
     }
 }

@@ -20,9 +20,11 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.ui.Alignment
 
 @Composable
 fun AddFriendOverlay(
@@ -34,102 +36,169 @@ fun AddFriendOverlay(
     var isErrorName by remember { mutableStateOf(false) }
     var isErrorFrequency by remember { mutableStateOf(false) }
 
-    AnimatedVisibility(
-        visible = true,
-        enter = scaleIn(initialScale = 0.9f, animationSpec = spring(dampingRatio = 0.8f,
-            stiffness = 300f)) + fadeIn(),
-        exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut(animationSpec = tween(durationMillis = 200))
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { onDismiss() }
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 40.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.background)
-                .clickable(enabled = false) {}
-                .padding(24.dp)
-        ) {
-            Text(text = "New friend", fontSize = 36.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
-            Spacer(modifier = Modifier.height(20.dp))
 
-            // Name
-            Text(text = "Name", fontSize = 14.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), modifier = Modifier.padding(bottom = 4.dp))
-            OutlinedTextField(
-                value = name, onValueChange = { name = it },
-                placeholder = { Text("Enter friend name", fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
-                textStyle = TextStyle(fontSize = 16.sp, fontFamily = FustatFamily, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)),
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = if (isErrorName) MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                    focusedBorderColor = if (isErrorName) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurface,
-                    cursorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
-                singleLine = true
-            )
-            if (isErrorName) {
-                Text(
-                    text = "Friend name is mandatory",
-                    color = MaterialTheme.colorScheme.onTertiary,
-                    fontSize = 12.sp,
-                    fontFamily = FustatFamily,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+        AnimatedVisibility(
+            visible = true,
+            enter = scaleIn(
+                initialScale = 0.9f, animationSpec = spring(
+                    dampingRatio = 0.8f,
+                    stiffness = 300f
                 )
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Frequency
-            Text(
-                text = "On a scale from 1 to 3, how often do you want to hear from your friend?",
-                fontSize = 14.sp,
-                fontFamily = FustatFamily,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                lineHeight = 14.sp,
+            ) + fadeIn(),
+            exit = scaleOut(
+                targetScale = 0.9f,
+                animationSpec = spring()
+            ) + fadeOut(animationSpec = tween(durationMillis = 200))
+        ) {
+            Column(
                 modifier = Modifier
-                    .padding(bottom = 8.dp)
-            )
-            
-            //5 circles
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (i in 1..3) {
-                    Icon(
-                        imageVector = if (i <= frequency) Icons.Filled.Circle else Icons.Outlined.Circle,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clickable { frequency = i },
-                        tint = if (isErrorFrequency) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.secondary
+                    .padding(horizontal = 40.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .clickable(enabled = false) {}
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "New friend",
+                    fontSize = 36.sp,
+                    fontFamily = FustatFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Name
+                Text(
+                    text = "Name",
+                    fontSize = 14.sp,
+                    fontFamily = FustatFamily,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                OutlinedTextField(
+                    value = name, onValueChange = { name = it },
+                    placeholder = {
+                        Text(
+                            "Enter friend name",
+                            fontFamily = FustatFamily,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    },
+                    textStyle = TextStyle(
+                        fontSize = 16.sp,
+                        fontFamily = FustatFamily,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = if (isErrorName) MaterialTheme.colorScheme.onTertiary.copy(
+                            alpha = 0.7f
+                        ) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        focusedBorderColor = if (isErrorName) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurface,
+                        cursorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    ),
+                    singleLine = true
+                )
+                if (isErrorName) {
+                    Text(
+                        text = "Friend name is mandatory",
+                        color = MaterialTheme.colorScheme.onTertiary,
+                        fontSize = 12.sp,
+                        fontFamily = FustatFamily,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                     )
                 }
-            }
 
-        if (isErrorFrequency) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Frequency
                 Text(
-                    text = "Frequency is mandatory",
-                    color = MaterialTheme.colorScheme.onTertiary,
-                    fontSize = 12.sp,
+                    text = "On a scale from 1 to 3, how often do you want to hear from your friend?",
+                    fontSize = 14.sp,
                     fontFamily = FustatFamily,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                    lineHeight = 14.sp,
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                //5 circles
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (i in 1..3) {
+                        Icon(
+                            imageVector = if (i <= frequency) Icons.Filled.Circle else Icons.Outlined.Circle,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .clickable {
+                                    frequency = i
+                                    isErrorFrequency =
+                                        false // Removes the error when user picks a frequency
+                                },
+                            tint = when {
+                                isErrorFrequency -> MaterialTheme.colorScheme.onTertiary
+                                i <= frequency -> MaterialTheme.colorScheme.secondary
+                                else -> MaterialTheme.colorScheme.secondary
+                            }
+                        )
+                    }
+                }
 
-            // Buttons
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = onDismiss) { Text("Cancel", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold) }
-                Button(
-                    onClick = {
-                        
-                        isErrorName = name.isBlank()
-                        isErrorFrequency = (frequency == 0)
+                if (isErrorFrequency) {
+                    Text(
+                        text = "Frequency is mandatory",
+                        color = MaterialTheme.colorScheme.onTertiary,
+                        fontSize = 12.sp,
+                        fontFamily = FustatFamily,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    )
+                }
 
-                        if (!isErrorName && !isErrorFrequency) {
-                            onSave(name, frequency)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Buttons
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = onDismiss) {
+                        Text(
+                            "Cancel",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 16.sp,
+                            fontFamily = FustatFamily,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                    Button(
+                        onClick = {
+
+                            isErrorName = name.isBlank()
+                            isErrorFrequency = (frequency == 0)
+
+                            if (!isErrorName && !isErrorFrequency) {
+                                onSave(name, frequency)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
-                    Text("Save", color = MaterialTheme.colorScheme.onSecondary, fontSize = 16.sp, fontFamily = FustatFamily, fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            "Save",
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            fontSize = 16.sp,
+                            fontFamily = FustatFamily,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
                 }
             }
         }

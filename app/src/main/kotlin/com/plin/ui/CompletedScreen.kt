@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.plin.ui.theme.PlinColors
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,10 +32,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.plin.domain.models.Task
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
+fun CompletedScreen(
+    viewModel: TaskListViewModel = viewModel(),
+    onEditTask: (Task) -> Unit
+) {
 
     // 1. Force archive loading as soon as this screen is opened
     LaunchedEffect(Unit) {
@@ -102,7 +105,7 @@ fun CompletedScreen(viewModel: TaskListViewModel = viewModel()) {
                                             }
                                         }
                                     },
-                                    onLongClick = { /* Manage here if you want to open the detail view as well */ },
+                                    onLongClick = { onEditTask(task) },
                                     onCompletedChange = { isDone ->
                                         if (!isDone && animationState == 0) {
                                             animationState = 1
