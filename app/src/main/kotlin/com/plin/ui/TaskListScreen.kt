@@ -78,8 +78,12 @@ fun TaskListScreen(
             if (incompleteTasks.isEmpty()) {
                 Text(
                     text = "No tasks yet.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontFamily = FustatFamily,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp)
                 )
             } else {
                 LazyColumn(

@@ -124,7 +124,7 @@ fun EditFriendOverlay(
                             imageVector = if (i <= frequency) Icons.Filled.Circle else Icons.Outlined.Circle,
                             contentDescription = null,
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(22.dp)
                                 .clickable { frequency = i },
                             tint = MaterialTheme.colorScheme.secondary
                         )
