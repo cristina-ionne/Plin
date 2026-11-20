@@ -164,6 +164,17 @@ object PlinMigrations {
         }
     }
 
+    val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `categories` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`name` TEXT NOT NULL, " +
+                        "`colorArgb` INTEGER NOT NULL)"
+            )
+        }
+    }
+
     /**
      * Replaces [Task.friendId] with [Task.friendIds] and remaps FRIEND_OF_THE_WEEK
      * rows to SOCIAL_ACTIVITY. Also rewrites fallback titles to Connect with {name}

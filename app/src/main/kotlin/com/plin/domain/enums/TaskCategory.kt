@@ -8,14 +8,15 @@ import com.plin.ui.theme.PlinColors
  */
 enum class TaskCategory {
     GENERIC,
+    SOCIAL_ACTIVITY,
     FUN,
     PERSONAL_DEVELOPMENT,
-    SOCIAL_ACTIVITY,
     CHORE,
     ADULTING,
     SPORT,
     HEALTH,
-    SPECIAL;
+    SPECIAL,
+    CUSTOM;
 
     fun toDisplayString(): String {
         return this.name
@@ -35,5 +36,6 @@ enum class TaskCategory {
             SPORT -> PlinColors.PlinDarkBlue
             HEALTH -> PlinColors.PlinRed
             SPECIAL -> PlinColors.PlinFuchsia
+            CUSTOM -> PlinColors.PlinBlue
         }
 }

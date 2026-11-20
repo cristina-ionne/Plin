@@ -42,6 +42,7 @@ import com.plin.domain.models.Friend
 import com.plin.domain.models.Task
 import android.app.Application
 import androidx.compose.foundation.layout.navigationBarsPadding
+import com.plin.data.CategoryService
 import com.plin.data.WelcomeSettings
 
 private enum class PlinScreen {
@@ -115,6 +116,15 @@ fun PlinApp(
             settingsStore = friendOfTheWeekSettingsStore,
         )
     }
+
+
+
+    val categoryService = remember { CategoryService(database.categoryDao()) }
+    val categoryViewModel: CategoryViewModel = viewModel(
+        factory = CategoryViewModelFactory(categoryService)
+    )
+    val allCategories by categoryViewModel.allCategories.collectAsStateWithLifecycle()
+
     val taskService = remember { TaskService(database.taskDao()) }
 
     var showAddOverlay by remember { mutableStateOf(false) }
@@ -123,6 +133,9 @@ fun PlinApp(
 
     var showAddFriendOverlay by remember { mutableStateOf(false) }
     var friendToEdit by remember { mutableStateOf<Friend?>(null) }
+
+    var showAddCategoryOverlay by remember { mutableStateOf(false) }
+    var categoryToEdit by remember { mutableStateOf(false) }
 
     var closingCategoryMenu by remember { mutableStateOf(false) }
 
@@ -219,7 +232,7 @@ fun PlinApp(
                         )
                     }
 
-                    // Animation for CategoriesOverlay
+                    // Animation for Categories screen
                     androidx.compose.animation.AnimatedVisibility(
                         visible = screen == PlinScreen.CATEGORIES,
                         enter = slideInHorizontally(
@@ -232,6 +245,7 @@ fun PlinApp(
                         )
                     ) {
                         CategoriesScreen(
+                            categories = allCategories,
                             onBackClick = {
                                 screen = PlinScreen.TASK_LIST
                                 showSettingsOverlay = true
@@ -239,6 +253,9 @@ fun PlinApp(
                             },
                             onEditCategory = { category ->
                                 // Edit logic
+                            },
+                            onAddCategory = {
+                                showAddCategoryOverlay = true
                             }
                         )
                     }
@@ -285,7 +302,7 @@ fun PlinApp(
 
             //Black background dimming with fade in/out animation
             AnimatedVisibility(
-                visible = showWelcomeOverlay || showAddOverlay || taskToEdit != null || showAddFriendOverlay || friendToEdit != null,
+                visible = showWelcomeOverlay || showAddOverlay || taskToEdit != null || showAddFriendOverlay || friendToEdit != null || showAddCategoryOverlay,
                 enter = fadeIn(animationSpec = tween(durationMillis = 300)),
                 exit = fadeOut(animationSpec = tween(durationMillis = 300))
             ) {
@@ -410,6 +427,57 @@ fun PlinApp(
                     }
                 }
             }
+
+            //Add Category Overlay with scale and fade in/out animation
+            AnimatedVisibility(
+                visible = showAddCategoryOverlay,
+                enter = scaleIn(
+                    initialScale = 0.8f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AddCategoryOverlay(
+                        onDismiss = { showAddCategoryOverlay = false },
+                        onSave = { catName, catColor ->
+                            categoryViewModel.addCategory(catName, catColor)
+                            showAddCategoryOverlay = false
+                        }
+                    )
+                }
+            }
+
+            /*//Edit Category Overlay with scale and fade in/out animation
+            AnimatedVisibility(
+                visible = categoryToEdit != null,
+                enter = scaleIn(
+                    initialScale = 0.8f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 300f)
+                ) + fadeIn(animationSpec = tween(durationMillis = 300, delayMillis = 150)),
+                exit = scaleOut(targetScale = 0.9f, animationSpec = spring()) + fadeOut()
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    categoryToEdit?.let { category ->
+                        EditCategoryOverlay(
+                            category = category,
+                            onDismiss = { categoryToEdit = null },
+                            onSave = { updated ->
+                                categoryViewModel.updateCategory(updated)
+                                categoryToEdit = null
+                            },
+                            onDelete = {
+                                categoryViewModel.deleteCategory(friend)
+                                categoryToEdit = null
+                            }
+                        )
+                    }
+                }
+            } */
+
         }
     }
 
